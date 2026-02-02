@@ -1,17 +1,24 @@
 package it.guesser.algashop.ordering.domain.entity;
 
+import static it.guesser.algashop.ordering.domain.validator.FieldsValidation.requireValidEmail;
+import static java.util.Objects.requireNonNull;
+
 import java.time.Instant;
 import java.time.LocalDate;
-import java.util.Objects;
 import java.util.UUID;
 
 import org.apache.commons.lang3.StringUtils;
 
 import it.guesser.algashop.ordering.domain.utils.IdGenerator;
 
-import static java.util.Objects.requireNonNull;
+import static it.guesser.algashop.ordering.domain.exceptions.ErrorMessages.*;
 
 public class Customer {
+
+    private static final String ANONYMOUS_FULL_NAME = "Anonymous";
+    private static final String ANONYMOUS_PHONE = "000-000-0000";
+    private static final String ANONYMOUS_DOCUMENT = "000-00-0000";
+    private static final String ANONYMOUS_EMAIL_SUFFIX = "@anonymous.com";
 
     private UUID uuid;
     private String fullName;
@@ -31,8 +38,8 @@ public class Customer {
         setFullName(fullName);
         setBirthDate(birthDate);
         setEmail(email);
-        this.phone = phone;
-        this.document = document;
+        setPhone(phone);
+        setDocument(document);
     }
 
     private void setUuid(UUID uuid) {
@@ -48,20 +55,20 @@ public class Customer {
     }
 
     private void setEmail(String email) {
-        this.email = requireNonNull(StringUtils.trimToNull(email));
+        this.email = requireValidEmail(email, EMAIL_IS_INVALID);
     }
 
     private void setPhone(String phone) {
-        this.phone = phone;
+        this.phone = requireNonNull(phone);
     }
 
     private void setDocument(String document) {
-        this.document = document;
+        this.document = requireNonNull(document);
     }
 
     private void setRegisteredAt(long registeredAt) {
         if (registeredAt <= 0) {
-            throw new IllegalArgumentException("Registered at must be greater than 0");
+            throw new IllegalArgumentException(REGISTERED_AT_IS_INVALID);
         }
         this.registeredAt = registeredAt;
     }
@@ -126,33 +133,39 @@ public class Customer {
         return loyaltyPoints;
     }
 
+    // ============== Businnes methods bellow
+
     public void addLoyaltyPoints(int points) {
-        this.loyaltyPoints += points;
+        setLoyaltyPoints(getLoyaltyPoints() + points);
     }
 
     public void archive() {
-        this.archived = true;
-        this.archivedAt = Instant.now().toEpochMilli();
+        setArchived(true);
+        setArchivedAt(Instant.now().toEpochMilli());
+        setFullName(ANONYMOUS_FULL_NAME);
+        setPhone(ANONYMOUS_PHONE);
+        setDocument(ANONYMOUS_DOCUMENT);
+        setEmail(UUID.randomUUID() + ANONYMOUS_EMAIL_SUFFIX);
     }
 
     public void enablePromotionNotifications() {
-        this.promotionNotificationsAllowed = true;
+        setPromotionNotificationsAllowed(true);
     }
 
     public void disablePromotionNotifications() {
-        this.promotionNotificationsAllowed = false;
+        setPromotionNotificationsAllowed(false);
     }
 
     public void changeName(String newName) {
-        this.fullName = newName;
+        setFullName(newName);
     }
 
     public void changeEmail(String newEmail) {
-        this.email = newEmail;
+        setEmail(newEmail);
     }
 
     public void changePhone(String newPhone) {
-        this.phone = newPhone;
+        setPhone(newPhone);
     }
 
     @Override

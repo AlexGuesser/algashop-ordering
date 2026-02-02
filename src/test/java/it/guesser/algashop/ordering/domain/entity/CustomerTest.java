@@ -1,6 +1,7 @@
 package it.guesser.algashop.ordering.domain.entity;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import java.time.LocalDate;
 
@@ -9,7 +10,7 @@ import org.junit.jupiter.api.Test;
 public class CustomerTest {
 
     @Test
-    void constructorShouldInitializeFieldsCorrectly() {
+    void givenValidData_whenConstructingCustomer_thenFieldsAreInitializedCorrectly() {
         LocalDate birthDate = LocalDate.of(1990, 1, 1);
 
         Customer customer = new Customer("John Doe", birthDate, "john.doe@example.com", "555-1234", "DOC123");
@@ -30,7 +31,70 @@ public class CustomerTest {
     }
 
     @Test
-    void addLoyaltyPointsShouldIncreasePoints() {
+    void givenNullEmail_whenConstructingCustomer_thenThrowsNullPointerException() {
+        LocalDate birthDate = LocalDate.of(1990, 1, 1);
+
+        assertThatThrownBy(() -> new Customer("John Doe", birthDate, null, "555-1234", "DOC123"))
+                .isInstanceOf(NullPointerException.class);
+    }
+
+    @Test
+    void givenBlankEmail_whenConstructingCustomer_thenThrowsNullPointerException() {
+        LocalDate birthDate = LocalDate.of(1990, 1, 1);
+
+        assertThatThrownBy(() -> new Customer("John Doe", birthDate, "   ", "555-1234", "DOC123"))
+                .isInstanceOf(NullPointerException.class);
+    }
+
+    @Test
+    void givenInvalidEmail_whenConstructingCustomer_thenThrowsIllegalArgumentException() {
+        LocalDate birthDate = LocalDate.of(1990, 1, 1);
+
+        assertThatThrownBy(() -> new Customer("John Doe", birthDate, "invalid-email", "555-1234", "DOC123"))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessage("E-mail is invalid");
+    }
+
+    @Test
+    void givenNullFullName_whenConstructingCustomer_thenThrowsNullPointerException() {
+        LocalDate birthDate = LocalDate.of(1990, 1, 1);
+
+        assertThatThrownBy(() -> new Customer(null, birthDate, "john.doe@example.com", "555-1234", "DOC123"))
+                .isInstanceOf(NullPointerException.class);
+    }
+
+    @Test
+    void givenBlankFullName_whenConstructingCustomer_thenThrowsNullPointerException() {
+        LocalDate birthDate = LocalDate.of(1990, 1, 1);
+
+        assertThatThrownBy(() -> new Customer("   ", birthDate, "john.doe@example.com", "555-1234", "DOC123"))
+                .isInstanceOf(NullPointerException.class);
+    }
+
+    @Test
+    void givenNullBirthDate_whenConstructingCustomer_thenThrowsNullPointerException() {
+        assertThatThrownBy(() -> new Customer("John Doe", null, "john.doe@example.com", "555-1234", "DOC123"))
+                .isInstanceOf(NullPointerException.class);
+    }
+
+    @Test
+    void givenNullPhone_whenConstructingCustomer_thenThrowsNullPointerException() {
+        LocalDate birthDate = LocalDate.of(1990, 1, 1);
+
+        assertThatThrownBy(() -> new Customer("John Doe", birthDate, "john.doe@example.com", null, "DOC123"))
+                .isInstanceOf(NullPointerException.class);
+    }
+
+    @Test
+    void givenNullDocument_whenConstructingCustomer_thenThrowsNullPointerException() {
+        LocalDate birthDate = LocalDate.of(1990, 1, 1);
+
+        assertThatThrownBy(() -> new Customer("John Doe", birthDate, "john.doe@example.com", "555-1234", null))
+                .isInstanceOf(NullPointerException.class);
+    }
+
+    @Test
+    void givenCustomer_whenAddLoyaltyPoints_thenPointsIncrease() {
         Customer customer = new Customer("John Doe", LocalDate.now(), "john.doe@example.com", "555-1234", "DOC123");
 
         customer.addLoyaltyPoints(10);
@@ -41,17 +105,22 @@ public class CustomerTest {
     }
 
     @Test
-    void archiveShouldMarkCustomerAsArchivedAndSetArchivedAt() {
+    void givenCustomer_whenArchive_thenCustomerIsMarkedAsArchivedAndPersonalDataIsAnonymized() {
         Customer customer = new Customer("John Doe", LocalDate.now(), "john.doe@example.com", "555-1234", "DOC123");
 
         customer.archive();
 
         assertThat(customer.isArchived()).isTrue();
         assertThat(customer.getArchivedAt()).isGreaterThan(0L);
+
+        assertThat(customer.getFullName()).isEqualTo("Anonymous");
+        assertThat(customer.getPhone()).isEqualTo("000-000-0000");
+        assertThat(customer.getDocument()).isEqualTo("000-00-0000");
+        assertThat(customer.getEmail()).endsWith("@anonymous.com");
     }
 
     @Test
-    void enablePromotionNotificationsShouldSetFlagToTrue() {
+    void givenCustomer_whenEnablePromotionNotifications_thenFlagIsSetToTrue() {
         Customer customer = new Customer("John Doe", LocalDate.now(), "john.doe@example.com", "555-1234", "DOC123");
 
         customer.enablePromotionNotifications();
@@ -60,7 +129,7 @@ public class CustomerTest {
     }
 
     @Test
-    void disablePromotionNotificationsShouldSetFlagToFalse() {
+    void givenCustomerWithPromotionNotificationsEnabled_whenDisablePromotionNotifications_thenFlagIsSetToFalse() {
         Customer customer = new Customer("John Doe", LocalDate.now(), "john.doe@example.com", "555-1234", "DOC123");
 
         customer.enablePromotionNotifications();
@@ -72,7 +141,7 @@ public class CustomerTest {
     }
 
     @Test
-    void changeNameShouldUpdateFullName() {
+    void givenCustomer_whenChangeName_thenFullNameIsUpdated() {
         Customer customer = new Customer("John Doe", LocalDate.now(), "john.doe@example.com", "555-1234", "DOC123");
 
         customer.changeName("Jane Smith");
@@ -81,7 +150,7 @@ public class CustomerTest {
     }
 
     @Test
-    void changeEmailShouldUpdateEmail() {
+    void givenCustomer_whenChangeEmail_thenEmailIsUpdated() {
         Customer customer = new Customer("John Doe", LocalDate.now(), "john.doe@example.com", "555-1234", "DOC123");
 
         customer.changeEmail("jane.smith@example.com");
@@ -90,7 +159,7 @@ public class CustomerTest {
     }
 
     @Test
-    void changePhoneShouldUpdatePhone() {
+    void givenCustomer_whenChangePhone_thenPhoneIsUpdated() {
         Customer customer = new Customer("John Doe", LocalDate.now(), "john.doe@example.com", "555-1234", "DOC123");
 
         customer.changePhone("999-8888");
@@ -99,7 +168,7 @@ public class CustomerTest {
     }
 
     @Test
-    void equalsAndHashCodeShouldFollowContract() {
+    void givenTwoCustomers_whenCompareEqualsAndHashCode_thenContractIsFollowed() {
         Customer customer1 = new Customer("John Doe", LocalDate.now(), "john.doe@example.com", "555-1234", "DOC123");
         Customer customer2 = new Customer("John Doe", LocalDate.now(), "john.doe@example.com", "555-1234", "DOC123");
 
@@ -112,7 +181,7 @@ public class CustomerTest {
     }
 
     @Test
-    void equalsShouldHandleNullAndDifferentTypes() {
+    void givenCustomer_whenCompareWithNullAndDifferentTypes_thenEqualsHandlesProperly() {
         Customer customer = new Customer("John Doe", LocalDate.now(), "john.doe@example.com", "555-1234", "DOC123");
 
         assertThat(customer).isNotEqualTo(null);
