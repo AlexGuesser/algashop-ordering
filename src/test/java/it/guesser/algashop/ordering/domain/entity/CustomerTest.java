@@ -6,6 +6,12 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import java.time.LocalDate;
 
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.EnumSources;
+import org.junit.jupiter.params.provider.ValueSource;
+
+import it.guesser.algashop.ordering.domain.exceptions.CustomerAlreadyArchivedException;
+import it.guesser.algashop.ordering.domain.exceptions.ErrorMessages;
 
 public class CustomerTest {
 
@@ -104,6 +110,17 @@ public class CustomerTest {
         assertThat(customer.getLoyaltyPoints()).isEqualTo(15);
     }
 
+    @ParameterizedTest
+    @ValueSource(ints = { 0, -1 })
+    void givenCustomer_whenAddingInvalidLoyaltyPoints_thenExceptionIsThrown(
+            int invalidLoyaltyPointsToAdd) {
+        Customer customer = createsTestCustomer();
+
+        assertThatThrownBy(
+                () -> customer.addLoyaltyPoints(invalidLoyaltyPointsToAdd))
+                .isInstanceOf(IllegalArgumentException.class);
+    }
+
     @Test
     void givenCustomer_whenArchive_thenCustomerIsMarkedAsArchivedAndPersonalDataIsAnonymized() {
         Customer customer = new Customer("John Doe", LocalDate.now(), "john.doe@example.com", "555-1234", "DOC123");
@@ -117,6 +134,7 @@ public class CustomerTest {
         assertThat(customer.getPhone()).isEqualTo("000-000-0000");
         assertThat(customer.getDocument()).isEqualTo("000-00-0000");
         assertThat(customer.getEmail()).endsWith("@anonymous.com");
+        assertThat(customer.isPromotionNotificationsAllowed()).isFalse();
     }
 
     @Test
@@ -187,5 +205,74 @@ public class CustomerTest {
         assertThat(customer).isNotEqualTo(null);
         assertThat(customer).isNotEqualTo("some string");
         assertThat(customer).isEqualTo(customer);
+    }
+
+    @Test
+    void giverAlreadyArchivedCustomer_whenTryingToUpdate_shouldGenerateException() {
+        Customer customer = createsTestCustomer();
+        assertThat(customer.isArchived()).isFalse();
+        customer.archive();
+        assertThat(customer.isArchived()).isTrue();
+
+        assertThatThrownBy(
+                () -> customer.addLoyaltyPoints(10))
+                .isInstanceOfSatisfying(
+                        CustomerAlreadyArchivedException.class,
+                        (exception) -> {
+                            assertThat(exception.getMessage()).isEqualTo(ErrorMessages.CUSTOMER_ALREADY_ARCHIVED);
+                        });
+
+        assertThatThrownBy(
+                () -> customer.archive())
+                .isInstanceOfSatisfying(
+                        CustomerAlreadyArchivedException.class,
+                        (exception) -> {
+                            assertThat(exception.getMessage()).isEqualTo(ErrorMessages.CUSTOMER_ALREADY_ARCHIVED);
+                        });
+
+        assertThatThrownBy(
+                () -> customer.enablePromotionNotifications())
+                .isInstanceOfSatisfying(
+                        CustomerAlreadyArchivedException.class,
+                        (exception) -> {
+                            assertThat(exception.getMessage()).isEqualTo(ErrorMessages.CUSTOMER_ALREADY_ARCHIVED);
+                        });
+
+        assertThatThrownBy(
+                () -> customer.disablePromotionNotifications())
+                .isInstanceOfSatisfying(
+                        CustomerAlreadyArchivedException.class,
+                        (exception) -> {
+                            assertThat(exception.getMessage()).isEqualTo(ErrorMessages.CUSTOMER_ALREADY_ARCHIVED);
+                        });
+
+        assertThatThrownBy(
+                () -> customer.changeName("New name"))
+                .isInstanceOfSatisfying(
+                        CustomerAlreadyArchivedException.class,
+                        (exception) -> {
+                            assertThat(exception.getMessage()).isEqualTo(ErrorMessages.CUSTOMER_ALREADY_ARCHIVED);
+                        });
+
+        assertThatThrownBy(
+                () -> customer.changeEmail("newEmail@email.com"))
+                .isInstanceOfSatisfying(
+                        CustomerAlreadyArchivedException.class,
+                        (exception) -> {
+                            assertThat(exception.getMessage()).isEqualTo(ErrorMessages.CUSTOMER_ALREADY_ARCHIVED);
+                        });
+
+        assertThatThrownBy(
+                () -> customer.changePhone("000-000"))
+                .isInstanceOfSatisfying(
+                        CustomerAlreadyArchivedException.class,
+                        (exception) -> {
+                            assertThat(exception.getMessage()).isEqualTo(ErrorMessages.CUSTOMER_ALREADY_ARCHIVED);
+                        });
+
+    }
+
+    private Customer createsTestCustomer() {
+        return new Customer("John Doe", LocalDate.now(), "john.doe@example.com", "555-1234", "DOC123");
     }
 }

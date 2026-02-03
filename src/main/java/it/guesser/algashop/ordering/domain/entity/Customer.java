@@ -9,6 +9,7 @@ import java.util.UUID;
 
 import org.apache.commons.lang3.StringUtils;
 
+import it.guesser.algashop.ordering.domain.exceptions.CustomerAlreadyArchivedException;
 import it.guesser.algashop.ordering.domain.utils.IdGenerator;
 
 import static it.guesser.algashop.ordering.domain.exceptions.ErrorMessages.*;
@@ -86,7 +87,16 @@ public class Customer {
     }
 
     private void setLoyaltyPoints(int loyaltyPoints) {
+        if (loyaltyPoints < 0) {
+            throw new IllegalArgumentException();
+        }
         this.loyaltyPoints = loyaltyPoints;
+    }
+
+    private void verifyIfChangeable() {
+        if (isArchived()) {
+            throw new CustomerAlreadyArchivedException();
+        }
     }
 
     public UUID getUuid() {
@@ -135,36 +145,47 @@ public class Customer {
 
     // ============== Businnes methods bellow
 
-    public void addLoyaltyPoints(int points) {
-        setLoyaltyPoints(getLoyaltyPoints() + points);
+    public void addLoyaltyPoints(int loyaltyPointsToAdd) {
+        verifyIfChangeable();
+        if (loyaltyPointsToAdd <= 0) {
+            throw new IllegalArgumentException();
+        }
+        setLoyaltyPoints(getLoyaltyPoints() + loyaltyPointsToAdd);
     }
 
     public void archive() {
+        verifyIfChangeable();
         setArchived(true);
         setArchivedAt(Instant.now().toEpochMilli());
         setFullName(ANONYMOUS_FULL_NAME);
         setPhone(ANONYMOUS_PHONE);
         setDocument(ANONYMOUS_DOCUMENT);
         setEmail(UUID.randomUUID() + ANONYMOUS_EMAIL_SUFFIX);
+        setPromotionNotificationsAllowed(false);
     }
 
     public void enablePromotionNotifications() {
+        verifyIfChangeable();
         setPromotionNotificationsAllowed(true);
     }
 
     public void disablePromotionNotifications() {
+        verifyIfChangeable();
         setPromotionNotificationsAllowed(false);
     }
 
     public void changeName(String newName) {
+        verifyIfChangeable();
         setFullName(newName);
     }
 
     public void changeEmail(String newEmail) {
+        verifyIfChangeable();
         setEmail(newEmail);
     }
 
     public void changePhone(String newPhone) {
+        verifyIfChangeable();
         setPhone(newPhone);
     }
 
