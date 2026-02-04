@@ -1,69 +1,71 @@
 package it.guesser.algashop.ordering.domain.entity;
 
-import static it.guesser.algashop.ordering.domain.validator.FieldsValidation.requireValidEmail;
+import static it.guesser.algashop.ordering.domain.exceptions.ErrorMessages.REGISTERED_AT_IS_INVALID;
 import static java.util.Objects.requireNonNull;
 
 import java.time.Instant;
-import java.time.LocalDate;
 import java.util.UUID;
 
-import org.apache.commons.lang3.StringUtils;
-
 import it.guesser.algashop.ordering.domain.exceptions.CustomerAlreadyArchivedException;
-import it.guesser.algashop.ordering.domain.utils.IdGenerator;
-
-import static it.guesser.algashop.ordering.domain.exceptions.ErrorMessages.*;
+import it.guesser.algashop.ordering.domain.valueobject.BirthDate;
+import it.guesser.algashop.ordering.domain.valueobject.CustomerId;
+import it.guesser.algashop.ordering.domain.valueobject.Document;
+import it.guesser.algashop.ordering.domain.valueobject.Email;
+import it.guesser.algashop.ordering.domain.valueobject.FullName;
+import it.guesser.algashop.ordering.domain.valueobject.LoyaltyPoints;
+import it.guesser.algashop.ordering.domain.valueobject.Phone;
 
 public class Customer {
 
-    private static final String ANONYMOUS_FULL_NAME = "Anonymous";
-    private static final String ANONYMOUS_PHONE = "000-000-0000";
-    private static final String ANONYMOUS_DOCUMENT = "000-00-0000";
+    private static final FullName ANONYMOUS_FULL_NAME = new FullName("Anonymous");
+    private static final Phone ANONYMOUS_PHONE = new Phone("000-000-0000");
+    private static final Document ANONYMOUS_DOCUMENT = new Document("000-00-0000");
     private static final String ANONYMOUS_EMAIL_SUFFIX = "@anonymous.com";
 
-    private UUID uuid;
-    private String fullName;
-    private LocalDate birthDate;
-    private String email;
-    private String phone;
-    private String document;
+    private CustomerId customerId;
+    private FullName fullName;
+    private BirthDate birthDate;
+    private Email email;
+    private Phone phone;
+    private Document document;
     private long registeredAt;
     private boolean promotionNotificationsAllowed;
     private boolean archived;
     private long archivedAt;
-    private int loyaltyPoints;
+    private LoyaltyPoints loyaltyPoints;
 
-    public Customer(String fullName, LocalDate birthDate, String email, String phone, String document) {
-        setUuid(IdGenerator.generateTimeBasedUuid());
+    public Customer(FullName fullName, BirthDate birthDate, Email email, Phone phone, Document document) {
+        setCustomerId(new CustomerId());
         setRegisteredAt(Instant.now().toEpochMilli());
         setFullName(fullName);
         setBirthDate(birthDate);
         setEmail(email);
         setPhone(phone);
         setDocument(document);
+        setLoyaltyPoints(LoyaltyPoints.ZERO);
     }
 
-    private void setUuid(UUID uuid) {
-        this.uuid = requireNonNull(uuid);
+    private void setCustomerId(CustomerId customerId) {
+        this.customerId = requireNonNull(customerId);
     }
 
-    private void setFullName(String fullName) {
-        this.fullName = requireNonNull(StringUtils.trimToNull(fullName));
+    private void setFullName(FullName fullName) {
+        this.fullName = requireNonNull(fullName);
     }
 
-    private void setBirthDate(LocalDate birthDate) {
+    private void setBirthDate(BirthDate birthDate) {
         this.birthDate = requireNonNull(birthDate);
     }
 
-    private void setEmail(String email) {
-        this.email = requireValidEmail(email, EMAIL_IS_INVALID);
+    private void setEmail(Email email) {
+        this.email = requireNonNull(email);
     }
 
-    private void setPhone(String phone) {
+    private void setPhone(Phone phone) {
         this.phone = requireNonNull(phone);
     }
 
-    private void setDocument(String document) {
+    private void setDocument(Document document) {
         this.document = requireNonNull(document);
     }
 
@@ -86,11 +88,8 @@ public class Customer {
         this.archivedAt = archivedAt;
     }
 
-    private void setLoyaltyPoints(int loyaltyPoints) {
-        if (loyaltyPoints < 0) {
-            throw new IllegalArgumentException();
-        }
-        this.loyaltyPoints = loyaltyPoints;
+    private void setLoyaltyPoints(LoyaltyPoints loyaltyPoints) {
+        this.loyaltyPoints = requireNonNull(loyaltyPoints);
     }
 
     private void verifyIfChangeable() {
@@ -99,27 +98,27 @@ public class Customer {
         }
     }
 
-    public UUID getUuid() {
-        return uuid;
+    public CustomerId getCustomerId() {
+        return customerId;
     }
 
-    public String getFullName() {
+    public FullName getFullName() {
         return fullName;
     }
 
-    public LocalDate getBirthDate() {
+    public BirthDate getBirthDate() {
         return birthDate;
     }
 
-    public String getEmail() {
+    public Email getEmail() {
         return email;
     }
 
-    public String getPhone() {
+    public Phone getPhone() {
         return phone;
     }
 
-    public String getDocument() {
+    public Document getDocument() {
         return document;
     }
 
@@ -139,18 +138,15 @@ public class Customer {
         return archivedAt;
     }
 
-    public int getLoyaltyPoints() {
+    public LoyaltyPoints getLoyaltyPoints() {
         return loyaltyPoints;
     }
 
     // ============== Businnes methods bellow
 
-    public void addLoyaltyPoints(int loyaltyPointsToAdd) {
+    public void addLoyaltyPoints(LoyaltyPoints loyaltyPointsToAdd) {
         verifyIfChangeable();
-        if (loyaltyPointsToAdd <= 0) {
-            throw new IllegalArgumentException();
-        }
-        setLoyaltyPoints(getLoyaltyPoints() + loyaltyPointsToAdd);
+        setLoyaltyPoints(getLoyaltyPoints().add(loyaltyPointsToAdd));
     }
 
     public void archive() {
@@ -160,7 +156,7 @@ public class Customer {
         setFullName(ANONYMOUS_FULL_NAME);
         setPhone(ANONYMOUS_PHONE);
         setDocument(ANONYMOUS_DOCUMENT);
-        setEmail(UUID.randomUUID() + ANONYMOUS_EMAIL_SUFFIX);
+        setEmail(new Email(UUID.randomUUID() + ANONYMOUS_EMAIL_SUFFIX));
         setPromotionNotificationsAllowed(false);
     }
 
@@ -174,17 +170,17 @@ public class Customer {
         setPromotionNotificationsAllowed(false);
     }
 
-    public void changeName(String newName) {
+    public void changeName(FullName newName) {
         verifyIfChangeable();
         setFullName(newName);
     }
 
-    public void changeEmail(String newEmail) {
+    public void changeEmail(Email newEmail) {
         verifyIfChangeable();
         setEmail(newEmail);
     }
 
-    public void changePhone(String newPhone) {
+    public void changePhone(Phone newPhone) {
         verifyIfChangeable();
         setPhone(newPhone);
     }
@@ -193,7 +189,7 @@ public class Customer {
     public int hashCode() {
         final int prime = 31;
         int result = 1;
-        result = prime * result + ((uuid == null) ? 0 : uuid.hashCode());
+        result = prime * result + ((customerId == null) ? 0 : customerId.hashCode());
         return result;
     }
 
@@ -206,10 +202,10 @@ public class Customer {
         if (getClass() != obj.getClass())
             return false;
         Customer other = (Customer) obj;
-        if (uuid == null) {
-            if (other.uuid != null)
+        if (customerId == null) {
+            if (other.customerId != null)
                 return false;
-        } else if (!uuid.equals(other.uuid))
+        } else if (!customerId.equals(other.customerId))
             return false;
         return true;
     }

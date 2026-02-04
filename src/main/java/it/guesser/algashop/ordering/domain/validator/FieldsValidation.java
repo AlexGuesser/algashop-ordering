@@ -15,7 +15,7 @@ public class FieldsValidation {
     }
 
     public static String requireValidEmail(String email) {
-        return requireValidEmail(email);
+        return requireValidEmail(email, null);
 
     }
 

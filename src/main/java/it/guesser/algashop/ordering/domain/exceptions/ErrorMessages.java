@@ -5,5 +5,6 @@ public class ErrorMessages {
     public static final String EMAIL_IS_INVALID = "E-mail is invalid";
     public static final String REGISTERED_AT_IS_INVALID = "Registered at must be greater than 0";
     public static final String CUSTOMER_ALREADY_ARCHIVED = "Customer is already archive, it is not possible to archive again";
+    public static final String BIRTH_DATE_IN_FUTURE = "Birth date cannot be in the future";
 
 }
