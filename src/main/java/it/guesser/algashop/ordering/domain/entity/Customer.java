@@ -7,6 +7,7 @@ import java.time.Instant;
 import java.util.UUID;
 
 import it.guesser.algashop.ordering.domain.exceptions.CustomerAlreadyArchivedException;
+import it.guesser.algashop.ordering.domain.valueobject.Address;
 import it.guesser.algashop.ordering.domain.valueobject.BirthDate;
 import it.guesser.algashop.ordering.domain.valueobject.CustomerId;
 import it.guesser.algashop.ordering.domain.valueobject.Document;
@@ -33,16 +34,55 @@ public class Customer {
     private boolean archived;
     private long archivedAt;
     private LoyaltyPoints loyaltyPoints;
+    private Address address;
 
-    public Customer(FullName fullName, BirthDate birthDate, Email email, Phone phone, Document document) {
-        setCustomerId(new CustomerId());
-        setRegisteredAt(Instant.now().toEpochMilli());
+    public static Customer brandNew(
+            FullName fullName,
+            BirthDate birthDate,
+            Email email,
+            Phone phone,
+            Document document,
+            Address address) {
+        return new Customer(
+                new CustomerId(),
+                fullName,
+                birthDate,
+                email,
+                phone,
+                document,
+                Instant.now().toEpochMilli(), // registered at
+                false,
+                false,
+                0,
+                LoyaltyPoints.ZERO,
+                address);
+    }
+
+    public Customer(
+            CustomerId customerId,
+            FullName fullName,
+            BirthDate birthDate,
+            Email email,
+            Phone phone,
+            Document document,
+            long registeredAt,
+            boolean promotionNotificationsAllowed,
+            boolean archived,
+            long archivedAt,
+            LoyaltyPoints loyaltyPoints,
+            Address address) {
+        setCustomerId(customerId);
         setFullName(fullName);
         setBirthDate(birthDate);
         setEmail(email);
         setPhone(phone);
         setDocument(document);
-        setLoyaltyPoints(LoyaltyPoints.ZERO);
+        setRegisteredAt(registeredAt);
+        setPromotionNotificationsAllowed(promotionNotificationsAllowed);
+        setArchived(archived);
+        setArchivedAt(archivedAt);
+        setLoyaltyPoints(loyaltyPoints);
+        setAddress(address);
     }
 
     private void setCustomerId(CustomerId customerId) {
@@ -90,6 +130,10 @@ public class Customer {
 
     private void setLoyaltyPoints(LoyaltyPoints loyaltyPoints) {
         this.loyaltyPoints = requireNonNull(loyaltyPoints);
+    }
+
+    private void setAddress(Address address) {
+        this.address = requireNonNull(address);
     }
 
     private void verifyIfChangeable() {
@@ -142,6 +186,10 @@ public class Customer {
         return loyaltyPoints;
     }
 
+    public Address getAddress() {
+        return address;
+    }
+
     // ============== Businnes methods bellow
 
     public void addLoyaltyPoints(LoyaltyPoints loyaltyPointsToAdd) {
@@ -158,6 +206,7 @@ public class Customer {
         setDocument(ANONYMOUS_DOCUMENT);
         setEmail(new Email(UUID.randomUUID() + ANONYMOUS_EMAIL_SUFFIX));
         setPromotionNotificationsAllowed(false);
+        setAddress(address.anonymize());
     }
 
     public void enablePromotionNotifications() {
@@ -183,6 +232,11 @@ public class Customer {
     public void changePhone(Phone newPhone) {
         verifyIfChangeable();
         setPhone(newPhone);
+    }
+
+    public void changeAddress(Address address) {
+        verifyIfChangeable();
+        setAddress(address);
     }
 
     @Override

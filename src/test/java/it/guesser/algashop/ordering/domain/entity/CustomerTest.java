@@ -11,257 +11,313 @@ import org.junit.jupiter.params.provider.ValueSource;
 
 import it.guesser.algashop.ordering.domain.exceptions.CustomerAlreadyArchivedException;
 import it.guesser.algashop.ordering.domain.exceptions.ErrorMessages;
+import it.guesser.algashop.ordering.domain.valueobject.Address;
 import it.guesser.algashop.ordering.domain.valueobject.BirthDate;
 import it.guesser.algashop.ordering.domain.valueobject.Document;
 import it.guesser.algashop.ordering.domain.valueobject.Email;
 import it.guesser.algashop.ordering.domain.valueobject.FullName;
 import it.guesser.algashop.ordering.domain.valueobject.LoyaltyPoints;
 import it.guesser.algashop.ordering.domain.valueobject.Phone;
+import it.guesser.algashop.ordering.domain.valueobject.ZipCode;
 
 public class CustomerTest {
 
-    @Test
-    void givenValidData_whenConstructingCustomer_thenFieldsAreInitializedCorrectly() {
-        FullName fullName = new FullName("John Doe");
-        BirthDate birthDate = new BirthDate(LocalDate.of(1990, 1, 1));
-        Email email = new Email("john.doe@example.com");
-        Phone phone = new Phone("555-1234");
-        Document document = new Document("DOC123");
+        @Test
+        void givenValidData_whenConstructingCustomer_thenFieldsAreInitializedCorrectly() {
+                FullName fullName = new FullName("John Doe");
+                BirthDate birthDate = new BirthDate(LocalDate.of(1990, 1, 1));
+                Email email = new Email("john.doe@example.com");
+                Phone phone = new Phone("555-1234");
+                Document document = new Document("DOC123");
+                Address address = createTestAddress();
 
-        Customer customer = new Customer(fullName, birthDate, email, phone, document);
+                Customer customer = Customer.brandNew(fullName, birthDate, email, phone, document, address);
 
-        assertThat(customer.getCustomerId()).isNotNull();
-        assertThat(customer.getRegisteredAt()).isGreaterThan(0L);
+                assertThat(customer.getCustomerId()).isNotNull();
+                assertThat(customer.getRegisteredAt()).isGreaterThan(0L);
 
-        assertThat(customer.getFullName()).isEqualTo(fullName);
-        assertThat(customer.getBirthDate()).isEqualTo(birthDate);
-        assertThat(customer.getEmail()).isEqualTo(email);
-        assertThat(customer.getPhone()).isEqualTo(phone);
-        assertThat(customer.getDocument()).isEqualTo(document);
+                assertThat(customer.getFullName()).isEqualTo(fullName);
+                assertThat(customer.getBirthDate()).isEqualTo(birthDate);
+                assertThat(customer.getEmail()).isEqualTo(email);
+                assertThat(customer.getPhone()).isEqualTo(phone);
+                assertThat(customer.getDocument()).isEqualTo(document);
 
-        assertThat(customer.isPromotionNotificationsAllowed()).isFalse();
-        assertThat(customer.isArchived()).isFalse();
-        assertThat(customer.getArchivedAt()).isZero();
-        assertThat(customer.getLoyaltyPoints().points()).isZero();
-    }
+                assertThat(customer.isPromotionNotificationsAllowed()).isFalse();
+                assertThat(customer.isArchived()).isFalse();
+                assertThat(customer.getArchivedAt()).isZero();
+                assertThat(customer.getLoyaltyPoints().points()).isZero();
+                assertThat(customer.getAddress()).isNotNull();
+                assertThat(customer.getAddress()).isEqualTo(address);
+        }
 
-    @Test
-    void givenNullFullName_whenConstructingCustomer_thenThrowsNullPointerException() {
-        BirthDate birthDate = new BirthDate(LocalDate.of(1990, 1, 1));
-        Email email = new Email("john.doe@example.com");
-        Phone phone = new Phone("555-1234");
-        Document document = new Document("DOC123");
+        @Test
+        void givenNullFullName_whenConstructingCustomer_thenThrowsNullPointerException() {
+                BirthDate birthDate = new BirthDate(LocalDate.of(1990, 1, 1));
+                Email email = new Email("john.doe@example.com");
+                Phone phone = new Phone("555-1234");
+                Document document = new Document("DOC123");
 
-        assertThatThrownBy(() -> new Customer(null, birthDate, email, phone, document))
-                .isInstanceOf(NullPointerException.class);
-    }
+                assertThatThrownBy(
+                                () -> Customer.brandNew(null, birthDate, email, phone, document, createTestAddress()))
+                                .isInstanceOf(NullPointerException.class);
+        }
 
-    @Test
-    void givenNullBirthDate_whenConstructingCustomer_thenThrowsNullPointerException() {
-        FullName fullName = new FullName("John Doe");
-        Email email = new Email("john.doe@example.com");
-        Phone phone = new Phone("555-1234");
-        Document document = new Document("DOC123");
+        @Test
+        void givenNullBirthDate_whenConstructingCustomer_thenThrowsNullPointerException() {
+                FullName fullName = new FullName("John Doe");
+                Email email = new Email("john.doe@example.com");
+                Phone phone = new Phone("555-1234");
+                Document document = new Document("DOC123");
 
-        assertThatThrownBy(() -> new Customer(fullName, null, email, phone, document))
-                .isInstanceOf(NullPointerException.class);
-    }
+                assertThatThrownBy(() -> Customer.brandNew(fullName, null, email, phone, document, createTestAddress()))
+                                .isInstanceOf(NullPointerException.class);
+        }
 
-    @Test
-    void givenNullEmail_whenConstructingCustomer_thenThrowsNullPointerException() {
-        FullName fullName = new FullName("John Doe");
-        BirthDate birthDate = new BirthDate(LocalDate.of(1990, 1, 1));
-        Phone phone = new Phone("555-1234");
-        Document document = new Document("DOC123");
+        @Test
+        void givenNullEmail_whenConstructingCustomer_thenThrowsNullPointerException() {
+                FullName fullName = new FullName("John Doe");
+                BirthDate birthDate = new BirthDate(LocalDate.of(1990, 1, 1));
+                Phone phone = new Phone("555-1234");
+                Document document = new Document("DOC123");
 
-        assertThatThrownBy(() -> new Customer(fullName, birthDate, null, phone, document))
-                .isInstanceOf(NullPointerException.class);
-    }
+                assertThatThrownBy(() -> Customer.brandNew(fullName, birthDate, null, phone, document,
+                                createTestAddress()))
+                                .isInstanceOf(NullPointerException.class);
+        }
 
-    @Test
-    void givenNullPhone_whenConstructingCustomer_thenThrowsNullPointerException() {
-        FullName fullName = new FullName("John Doe");
-        BirthDate birthDate = new BirthDate(LocalDate.of(1990, 1, 1));
-        Email email = new Email("john.doe@example.com");
-        Document document = new Document("DOC123");
+        @Test
+        void givenNullPhone_whenConstructingCustomer_thenThrowsNullPointerException() {
+                FullName fullName = new FullName("John Doe");
+                BirthDate birthDate = new BirthDate(LocalDate.of(1990, 1, 1));
+                Email email = new Email("john.doe@example.com");
+                Document document = new Document("DOC123");
 
-        assertThatThrownBy(() -> new Customer(fullName, birthDate, email, null, document))
-                .isInstanceOf(NullPointerException.class);
-    }
+                assertThatThrownBy(() -> Customer.brandNew(fullName, birthDate, email, null, document,
+                                createTestAddress()))
+                                .isInstanceOf(NullPointerException.class);
+        }
 
-    @Test
-    void givenNullDocument_whenConstructingCustomer_thenThrowsNullPointerException() {
-        FullName fullName = new FullName("John Doe");
-        BirthDate birthDate = new BirthDate(LocalDate.of(1990, 1, 1));
-        Email email = new Email("john.doe@example.com");
-        Phone phone = new Phone("555-1234");
+        @Test
+        void givenNullDocument_whenConstructingCustomer_thenThrowsNullPointerException() {
+                FullName fullName = new FullName("John Doe");
+                BirthDate birthDate = new BirthDate(LocalDate.of(1990, 1, 1));
+                Email email = new Email("john.doe@example.com");
+                Phone phone = new Phone("555-1234");
 
-        assertThatThrownBy(() -> new Customer(fullName, birthDate, email, phone, null))
-                .isInstanceOf(NullPointerException.class);
-    }
+                assertThatThrownBy(
+                                () -> Customer.brandNew(fullName, birthDate, email, phone, null, createTestAddress()))
+                                .isInstanceOf(NullPointerException.class);
+        }
 
-    @Test
-    void givenCustomer_whenAddLoyaltyPoints_thenPointsIncrease() {
-        Customer customer = createsTestCustomer();
+        @Test
+        void givenCustomer_whenAddLoyaltyPoints_thenPointsIncrease() {
+                Customer customer = createsTestCustomer();
 
-        customer.addLoyaltyPoints(new LoyaltyPoints(10));
-        assertThat(customer.getLoyaltyPoints().points()).isEqualTo(10);
+                customer.addLoyaltyPoints(new LoyaltyPoints(10));
+                assertThat(customer.getLoyaltyPoints().points()).isEqualTo(10);
 
-        customer.addLoyaltyPoints(new LoyaltyPoints(5));
-        assertThat(customer.getLoyaltyPoints().points()).isEqualTo(15);
-    }
+                customer.addLoyaltyPoints(new LoyaltyPoints(5));
+                assertThat(customer.getLoyaltyPoints().points()).isEqualTo(15);
+        }
 
-    @ParameterizedTest
-    @ValueSource(ints = { -1 })
-    void givenCustomer_whenAddingInvalidLoyaltyPoints_thenExceptionIsThrown(
-            int invalidLoyaltyPointsToAdd) {
-        Customer customer = createsTestCustomer();
+        @ParameterizedTest
+        @ValueSource(ints = { -1 })
+        void givenCustomer_whenAddingInvalidLoyaltyPoints_thenExceptionIsThrown(
+                        int invalidLoyaltyPointsToAdd) {
+                Customer customer = createsTestCustomer();
 
-        assertThatThrownBy(
-                () -> customer.addLoyaltyPoints(new LoyaltyPoints(invalidLoyaltyPointsToAdd)))
-                .isInstanceOf(IllegalArgumentException.class);
-    }
+                assertThatThrownBy(
+                                () -> customer.addLoyaltyPoints(new LoyaltyPoints(invalidLoyaltyPointsToAdd)))
+                                .isInstanceOf(IllegalArgumentException.class);
+        }
 
-    @Test
-    void givenCustomer_whenArchive_thenCustomerIsMarkedAsArchivedAndPersonalDataIsAnonymized() {
-        Customer customer = createsTestCustomer();
+        @Test
+        void givenCustomer_whenArchive_thenCustomerIsMarkedAsArchivedAndPersonalDataIsAnonymized() {
+                Customer customer = createsTestCustomer();
+                Address originalAddress = customer.getAddress();
 
-        customer.archive();
+                customer.archive();
 
-        assertThat(customer.isArchived()).isTrue();
-        assertThat(customer.getArchivedAt()).isGreaterThan(0L);
+                assertThat(customer.isArchived()).isTrue();
+                assertThat(customer.getArchivedAt()).isGreaterThan(0L);
 
-        assertThat(customer.getFullName()).isEqualTo(new FullName("Anonymous"));
-        assertThat(customer.getPhone()).isEqualTo(new Phone("000-000-0000"));
-        assertThat(customer.getDocument()).isEqualTo(new Document("000-00-0000"));
-        assertThat(customer.getEmail().value()).endsWith("@anonymous.com");
-        assertThat(customer.isPromotionNotificationsAllowed()).isFalse();
-    }
+                assertThat(customer.getFullName()).isEqualTo(new FullName("Anonymous"));
+                assertThat(customer.getPhone()).isEqualTo(new Phone("000-000-0000"));
+                assertThat(customer.getDocument()).isEqualTo(new Document("000-00-0000"));
+                assertThat(customer.getEmail().value()).endsWith("@anonymous.com");
+                assertThat(customer.isPromotionNotificationsAllowed()).isFalse();
 
-    @Test
-    void givenCustomer_whenEnablePromotionNotifications_thenFlagIsSetToTrue() {
-        Customer customer = createsTestCustomer();
+                Address anonymizedAddress = customer.getAddress();
+                assertThat(anonymizedAddress).isNotEqualTo(originalAddress);
+                assertThat(anonymizedAddress)
+                                .isEqualTo(new Address(
+                                                "anonymous",
+                                                "anonymous",
+                                                originalAddress.neighborhood(),
+                                                originalAddress.city(),
+                                                originalAddress.state(),
+                                                originalAddress.zipCode()));
+        }
 
-        customer.enablePromotionNotifications();
+        @Test
+        void givenCustomer_whenEnablePromotionNotifications_thenFlagIsSetToTrue() {
+                Customer customer = createsTestCustomer();
 
-        assertThat(customer.isPromotionNotificationsAllowed()).isTrue();
-    }
+                customer.enablePromotionNotifications();
 
-    @Test
-    void givenCustomerWithPromotionNotificationsEnabled_whenDisablePromotionNotifications_thenFlagIsSetToFalse() {
-        Customer customer = createsTestCustomer();
+                assertThat(customer.isPromotionNotificationsAllowed()).isTrue();
+        }
 
-        customer.enablePromotionNotifications();
-        assertThat(customer.isPromotionNotificationsAllowed()).isTrue();
+        @Test
+        void givenCustomerWithPromotionNotificationsEnabled_whenDisablePromotionNotifications_thenFlagIsSetToFalse() {
+                Customer customer = createsTestCustomer();
 
-        customer.disablePromotionNotifications();
+                customer.enablePromotionNotifications();
+                assertThat(customer.isPromotionNotificationsAllowed()).isTrue();
 
-        assertThat(customer.isPromotionNotificationsAllowed()).isFalse();
-    }
+                customer.disablePromotionNotifications();
 
-    @Test
-    void givenCustomer_whenChangeName_thenFullNameIsUpdated() {
-        Customer customer = createsTestCustomer();
+                assertThat(customer.isPromotionNotificationsAllowed()).isFalse();
+        }
 
-        customer.changeName(new FullName("Jane Smith"));
+        @Test
+        void givenCustomer_whenChangeName_thenFullNameIsUpdated() {
+                Customer customer = createsTestCustomer();
 
-        assertThat(customer.getFullName()).isEqualTo(new FullName("Jane Smith"));
-    }
+                customer.changeName(new FullName("Jane Smith"));
 
-    @Test
-    void givenCustomer_whenChangeEmail_thenEmailIsUpdated() {
-        Customer customer = createsTestCustomer();
+                assertThat(customer.getFullName()).isEqualTo(new FullName("Jane Smith"));
+        }
 
-        customer.changeEmail(new Email("jane.smith@example.com"));
+        @Test
+        void givenCustomer_whenChangeEmail_thenEmailIsUpdated() {
+                Customer customer = createsTestCustomer();
 
-        assertThat(customer.getEmail()).isEqualTo(new Email("jane.smith@example.com"));
-    }
+                customer.changeEmail(new Email("jane.smith@example.com"));
 
-    @Test
-    void givenCustomer_whenChangePhone_thenPhoneIsUpdated() {
-        Customer customer = createsTestCustomer();
+                assertThat(customer.getEmail()).isEqualTo(new Email("jane.smith@example.com"));
+        }
 
-        customer.changePhone(new Phone("999-8888"));
+        @Test
+        void givenCustomer_whenChangePhone_thenPhoneIsUpdated() {
+                Customer customer = createsTestCustomer();
 
-        assertThat(customer.getPhone()).isEqualTo(new Phone("999-8888"));
-    }
+                customer.changePhone(new Phone("999-8888"));
 
-    @Test
-    void givenTwoCustomers_whenCompareEqualsAndHashCode_thenContractIsFollowed() {
-        Customer customer1 = createsTestCustomer();
-        Customer customer2 = createsTestCustomer();
+                assertThat(customer.getPhone()).isEqualTo(new Phone("999-8888"));
+        }
 
-        assertThat(customer1).isEqualTo(customer1);
-        assertThat(customer1.hashCode()).isEqualTo(customer1.hashCode());
+        @Test
+        void givenCustomer_whenChangeAddress_thenAddressIsUpdated() {
+                Customer customer = createsTestCustomer();
+                Address newAddress = new Address(
+                                "new street",
+                                "new complement",
+                                "new neighborhood",
+                                "new city",
+                                "new state",
+                                new ZipCode("54321"));
+                assertThat(customer.getAddress()).isNotEqualTo(newAddress);
 
-        assertThat(customer1).isNotEqualTo(customer2);
-    }
+                customer.changeAddress(newAddress);
 
-    @Test
-    void givenCustomer_whenCompareWithNullAndDifferentTypes_thenEqualsHandlesProperly() {
-        Customer customer = createsTestCustomer();
+                assertThat(customer.getAddress()).isEqualTo(newAddress);
+        }
 
-        assertThat(customer).isNotEqualTo(null);
-        assertThat(customer).isNotEqualTo("some string");
-        assertThat(customer).isEqualTo(customer);
-    }
+        @Test
+        void givenTwoCustomers_whenCompareEqualsAndHashCode_thenContractIsFollowed() {
+                Customer customer1 = createsTestCustomer();
+                Customer customer2 = createsTestCustomer();
 
-    @Test
-    void givenAlreadyArchivedCustomer_whenTryingToUpdate_thenExceptionIsThrown() {
-        Customer customer = createsTestCustomer();
-        assertThat(customer.isArchived()).isFalse();
-        customer.archive();
-        assertThat(customer.isArchived()).isTrue();
+                assertThat(customer1).isEqualTo(customer1);
+                assertThat(customer1.hashCode()).isEqualTo(customer1.hashCode());
 
-        assertThatThrownBy(() -> customer.addLoyaltyPoints(new LoyaltyPoints(10)))
-                .isInstanceOfSatisfying(
-                        CustomerAlreadyArchivedException.class,
-                        (exception) ->
-                                assertThat(exception.getMessage()).isEqualTo(ErrorMessages.CUSTOMER_ALREADY_ARCHIVED));
+                assertThat(customer1).isNotEqualTo(customer2);
+        }
 
-        assertThatThrownBy(() -> customer.archive())
-                .isInstanceOfSatisfying(
-                        CustomerAlreadyArchivedException.class,
-                        (exception) ->
-                                assertThat(exception.getMessage()).isEqualTo(ErrorMessages.CUSTOMER_ALREADY_ARCHIVED));
+        @Test
+        void givenCustomer_whenCompareWithNullAndDifferentTypes_thenEqualsHandlesProperly() {
+                Customer customer = createsTestCustomer();
 
-        assertThatThrownBy(() -> customer.enablePromotionNotifications())
-                .isInstanceOfSatisfying(
-                        CustomerAlreadyArchivedException.class,
-                        (exception) ->
-                                assertThat(exception.getMessage()).isEqualTo(ErrorMessages.CUSTOMER_ALREADY_ARCHIVED));
+                assertThat(customer).isNotEqualTo(null);
+                assertThat(customer).isNotEqualTo("some string");
+                assertThat(customer).isEqualTo(customer);
+        }
 
-        assertThatThrownBy(() -> customer.disablePromotionNotifications())
-                .isInstanceOfSatisfying(
-                        CustomerAlreadyArchivedException.class,
-                        (exception) ->
-                                assertThat(exception.getMessage()).isEqualTo(ErrorMessages.CUSTOMER_ALREADY_ARCHIVED));
+        @Test
+        void givenAlreadyArchivedCustomer_whenTryingToUpdate_thenExceptionIsThrown() {
+                Customer customer = createsTestCustomer();
+                assertThat(customer.isArchived()).isFalse();
+                customer.archive();
+                assertThat(customer.isArchived()).isTrue();
 
-        assertThatThrownBy(() -> customer.changeName(new FullName("New name")))
-                .isInstanceOfSatisfying(
-                        CustomerAlreadyArchivedException.class,
-                        (exception) ->
-                                assertThat(exception.getMessage()).isEqualTo(ErrorMessages.CUSTOMER_ALREADY_ARCHIVED));
+                assertThatThrownBy(() -> customer.addLoyaltyPoints(new LoyaltyPoints(10)))
+                                .isInstanceOfSatisfying(
+                                                CustomerAlreadyArchivedException.class,
+                                                (exception) -> assertThat(exception.getMessage())
+                                                                .isEqualTo(ErrorMessages.CUSTOMER_ALREADY_ARCHIVED));
 
-        assertThatThrownBy(() -> customer.changeEmail(new Email("newEmail@email.com")))
-                .isInstanceOfSatisfying(
-                        CustomerAlreadyArchivedException.class,
-                        (exception) ->
-                                assertThat(exception.getMessage()).isEqualTo(ErrorMessages.CUSTOMER_ALREADY_ARCHIVED));
+                assertThatThrownBy(() -> customer.archive())
+                                .isInstanceOfSatisfying(
+                                                CustomerAlreadyArchivedException.class,
+                                                (exception) -> assertThat(exception.getMessage())
+                                                                .isEqualTo(ErrorMessages.CUSTOMER_ALREADY_ARCHIVED));
 
-        assertThatThrownBy(() -> customer.changePhone(new Phone("000-000")))
-                .isInstanceOfSatisfying(
-                        CustomerAlreadyArchivedException.class,
-                        (exception) ->
-                                assertThat(exception.getMessage()).isEqualTo(ErrorMessages.CUSTOMER_ALREADY_ARCHIVED));
-    }
+                assertThatThrownBy(() -> customer.enablePromotionNotifications())
+                                .isInstanceOfSatisfying(
+                                                CustomerAlreadyArchivedException.class,
+                                                (exception) -> assertThat(exception.getMessage())
+                                                                .isEqualTo(ErrorMessages.CUSTOMER_ALREADY_ARCHIVED));
 
-    private Customer createsTestCustomer() {
-        return new Customer(
-                new FullName("John Doe"),
-                new BirthDate(LocalDate.now()),
-                new Email("john.doe@example.com"),
-                new Phone("555-1234"),
-                new Document("DOC123"));
-    }
+                assertThatThrownBy(() -> customer.disablePromotionNotifications())
+                                .isInstanceOfSatisfying(
+                                                CustomerAlreadyArchivedException.class,
+                                                (exception) -> assertThat(exception.getMessage())
+                                                                .isEqualTo(ErrorMessages.CUSTOMER_ALREADY_ARCHIVED));
+
+                assertThatThrownBy(() -> customer.changeName(new FullName("New name")))
+                                .isInstanceOfSatisfying(
+                                                CustomerAlreadyArchivedException.class,
+                                                (exception) -> assertThat(exception.getMessage())
+                                                                .isEqualTo(ErrorMessages.CUSTOMER_ALREADY_ARCHIVED));
+
+                assertThatThrownBy(() -> customer.changeEmail(new Email("newEmail@email.com")))
+                                .isInstanceOfSatisfying(
+                                                CustomerAlreadyArchivedException.class,
+                                                (exception) -> assertThat(exception.getMessage())
+                                                                .isEqualTo(ErrorMessages.CUSTOMER_ALREADY_ARCHIVED));
+
+                assertThatThrownBy(() -> customer.changePhone(new Phone("000-000")))
+                                .isInstanceOfSatisfying(
+                                                CustomerAlreadyArchivedException.class,
+                                                (exception) -> assertThat(exception.getMessage())
+                                                                .isEqualTo(ErrorMessages.CUSTOMER_ALREADY_ARCHIVED));
+
+                assertThatThrownBy(() -> customer.changeAddress(createTestAddress()))
+                                .isInstanceOfSatisfying(
+                                                CustomerAlreadyArchivedException.class,
+                                                (exception) -> assertThat(exception.getMessage())
+                                                                .isEqualTo(ErrorMessages.CUSTOMER_ALREADY_ARCHIVED));
+
+        }
+
+        private Customer createsTestCustomer() {
+                return Customer.brandNew(
+                                new FullName("John Doe"),
+                                new BirthDate(LocalDate.now()),
+                                new Email("john.doe@example.com"),
+                                new Phone("555-1234"),
+                                new Document("DOC123"),
+                                createTestAddress());
+        }
+
+        private Address createTestAddress() {
+                return new Address(
+                                "street",
+                                "complement",
+                                "neighborhood",
+                                "city",
+                                "state",
+                                new ZipCode("12345"));
+        }
 }
