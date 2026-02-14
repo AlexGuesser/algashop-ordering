@@ -58,7 +58,24 @@ public class Customer {
                 address);
     }
 
-    public Customer(
+    public static Customer existent(
+            CustomerId customerId,
+            FullName fullName,
+            BirthDate birthDate,
+            Email email,
+            Phone phone,
+            Document document,
+            long registeredAt,
+            boolean promotionNotificationsAllowed,
+            boolean archived,
+            long archivedAt,
+            LoyaltyPoints loyaltyPoints,
+            Address address) {
+        return new Customer(customerId, fullName, birthDate, email, phone, document, registeredAt,
+                promotionNotificationsAllowed, archived, archivedAt, loyaltyPoints, address);
+    }
+
+    private Customer(
             CustomerId customerId,
             FullName fullName,
             BirthDate birthDate,
