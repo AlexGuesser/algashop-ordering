@@ -11,7 +11,7 @@ public record Money(BigDecimal value) implements Comparable<Money> {
 
     public Money {
         requireNonNull(value);
-        if (ZERO.value().compareTo(value) > 0) {
+        if (BigDecimal.ZERO.compareTo(value) > 0) {
             throw new IllegalArgumentException("Money cannot be negative");
         }
 
