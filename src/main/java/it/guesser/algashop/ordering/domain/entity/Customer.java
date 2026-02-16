@@ -9,12 +9,12 @@ import java.util.UUID;
 import it.guesser.algashop.ordering.domain.exceptions.CustomerAlreadyArchivedException;
 import it.guesser.algashop.ordering.domain.valueobject.Address;
 import it.guesser.algashop.ordering.domain.valueobject.BirthDate;
-import it.guesser.algashop.ordering.domain.valueobject.CustomerId;
 import it.guesser.algashop.ordering.domain.valueobject.Document;
 import it.guesser.algashop.ordering.domain.valueobject.Email;
 import it.guesser.algashop.ordering.domain.valueobject.FullName;
 import it.guesser.algashop.ordering.domain.valueobject.LoyaltyPoints;
 import it.guesser.algashop.ordering.domain.valueobject.Phone;
+import it.guesser.algashop.ordering.domain.valueobject.id.CustomerId;
 
 public class Customer {
 

@@ -74,6 +74,14 @@
 			<scope>compile</scope>
 		</dependency>
 
+		<!-- Source: https://mvnrepository.com/artifact/io.hypersistence/hypersistence-tsid -->
+		<dependency>
+			<groupId>io.hypersistence</groupId>
+			<artifactId>hypersistence-tsid</artifactId>
+			<version>2.1.4</version>
+			<scope>compile</scope>
+		</dependency>
+
 	</dependencies>
 
 	<build>

@@ -1,4 +1,4 @@
-package it.guesser.algashop.ordering.domain.valueobject;
+package it.guesser.algashop.ordering.domain.valueobject.id;
 
 import static java.util.Objects.requireNonNull;
 
@@ -8,12 +8,12 @@ import it.guesser.algashop.ordering.domain.utils.IdGenerator;
 
 public record CustomerId(UUID value) {
 
-    public CustomerId() {
-        this(IdGenerator.generateTimeBasedUuid());
+    public CustomerId {
+        requireNonNull(value);
     }
 
-    public CustomerId(UUID value) {
-        this.value = requireNonNull(value);
+    public CustomerId() {
+        this(IdGenerator.generateTimeBasedUuid());
     }
 
     @Override
