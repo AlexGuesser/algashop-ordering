@@ -17,19 +17,33 @@ public class OrderItem {
     private ProductId productId;
     private ProductName productName;
 
-    private Money price;
+    private Money productPrice;
     private Quantity quantity;
+
     private Money totalAmount;
 
-    public OrderItem(OrderItemId id, OrderId orderId, ProductId productId, ProductName productName, Money price,
+    private OrderItem(OrderItemId id, OrderId orderId, ProductId productId, ProductName productName, Money price,
             Quantity quantity, Money totalAmount) {
-        setId(id);
-        setOrderId(orderId);
-        setProductId(productId);
-        setProductName(productName);
-        setPrice(price);
-        setQuantity(quantity);
-        setTotalAmount(totalAmount);
+        this.id = requireNonNull(id);
+        this.orderId = requireNonNull(orderId);
+        this.productId = requireNonNull(productId);
+        this.productName = requireNonNull(productName);
+        this.productPrice = requireNonNull(price);
+        this.quantity = requireNonNull(quantity);
+        this.totalAmount = requireNonNull(totalAmount);
+    }
+
+    public static OrderItem brandNew(OrderId orderId, ProductId productId, ProductName productName, Money price,
+            Quantity quantity) {
+
+        return new OrderItem(
+                new OrderItemId(),
+                orderId,
+                productId,
+                productName,
+                price,
+                quantity,
+                price.multiply(quantity));
     }
 
     public OrderItemId getId() {
@@ -48,8 +62,8 @@ public class OrderItem {
         return productName;
     }
 
-    public Money getPrice() {
-        return price;
+    public Money getProductPrice() {
+        return productPrice;
     }
 
     public Quantity getQuantity() {
@@ -76,8 +90,8 @@ public class OrderItem {
         this.productName = requireNonNull(productName);
     }
 
-    private void setPrice(Money price) {
-        this.price = requireNonNull(price);
+    private void setProductPrice(Money price) {
+        this.productPrice = requireNonNull(price);
     }
 
     private void setQuantity(Quantity quantity) {

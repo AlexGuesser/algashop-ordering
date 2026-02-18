@@ -38,6 +38,46 @@ public class Order {
 
     private Set<OrderItem> items = new HashSet<>();
 
+    private Order(OrderId id, CustomerId customerId, Money totalAmount, Quantity totalItems, long placedAt, long paidAt,
+            long canceledAt, long readyAt, BillingInfo billingInfo, ShippingInfo shippingInfo, OrderStatus status,
+            PaymentMethod paymentMethod, Money shippingCost, LocalDate expectedDeliveryDate, Set<OrderItem> items) {
+        this.id = requireNonNull(id);
+        this.customerId = requireNonNull(customerId);
+        this.totalAmount = requireNonNull(totalAmount);
+        this.totalItems = requireNonNull(totalItems);
+        this.placedAt = placedAt;
+        this.paidAt = paidAt;
+        this.canceledAt = canceledAt;
+        this.readyAt = readyAt;
+        this.billingInfo = billingInfo;
+        this.shippingInfo = shippingInfo;
+        this.status = requireNonNull(status);
+        this.paymentMethod = paymentMethod;
+        this.shippingCost = shippingCost;
+        this.expectedDeliveryDate = expectedDeliveryDate;
+        this.items = requireNonNull(items);
+    }
+
+    public static Order draft(CustomerId customerId) {
+        return new Order(
+                new OrderId(),
+                customerId,
+                Money.ZERO,
+                Quantity.ZERO,
+                0,
+                0,
+                0,
+                0,
+                null,
+                null,
+                OrderStatus.DRAFT,
+                null,
+                null,
+                null,
+                new HashSet<>());
+
+    }
+
     public OrderId getId() {
         return id;
     }
