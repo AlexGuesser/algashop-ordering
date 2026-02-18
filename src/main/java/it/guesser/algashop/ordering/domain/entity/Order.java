@@ -1,18 +1,19 @@
 package it.guesser.algashop.ordering.domain.entity;
 
-import it.guesser.algashop.ordering.domain.valueobject.Money;
-import it.guesser.algashop.ordering.domain.valueobject.Quantity;
+import static java.util.Objects.requireNonNull;
 
 import java.time.LocalDate;
 import java.util.HashSet;
 import java.util.Set;
 
 import it.guesser.algashop.ordering.domain.valueobject.BillingInfo;
+import it.guesser.algashop.ordering.domain.valueobject.Money;
+import it.guesser.algashop.ordering.domain.valueobject.ProductName;
+import it.guesser.algashop.ordering.domain.valueobject.Quantity;
 import it.guesser.algashop.ordering.domain.valueobject.ShippingInfo;
 import it.guesser.algashop.ordering.domain.valueobject.id.CustomerId;
 import it.guesser.algashop.ordering.domain.valueobject.id.OrderId;
-
-import static java.util.Objects.requireNonNull;
+import it.guesser.algashop.ordering.domain.valueobject.id.ProductId;
 
 public class Order {
 
@@ -138,14 +139,6 @@ public class Order {
         return items;
     }
 
-    private void setId(OrderId id) {
-        this.id = requireNonNull(id);
-    }
-
-    private void setCustomerId(CustomerId customerId) {
-        this.customerId = requireNonNull(customerId);
-    }
-
     private void setTotalAmount(Money totalAmount) {
         this.totalAmount = requireNonNull(totalAmount);
     }
@@ -194,8 +187,13 @@ public class Order {
         this.expectedDeliveryDate = requireNonNull(expectedDeliveryDate);
     }
 
-    private void setItems(Set<OrderItem> items) {
-        this.items = requireNonNull(items);
+    public void addItem(ProductId productId, ProductName productName, Money price,
+            Quantity quantity) {
+        OrderItem newOrderItem = OrderItem.brandNew(getId(), productId, productName, price, quantity);
+
+        this.items.add(newOrderItem);
+        setTotalAmount(getTotalAmount().add(newOrderItem.getTotalAmount()));
+        setTotalItems(getTotalItems().add(quantity));
     }
 
     @Override

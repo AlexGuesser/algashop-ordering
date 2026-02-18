@@ -33,7 +33,7 @@ public class OrderItem {
         this.totalAmount = requireNonNull(totalAmount);
     }
 
-    public static OrderItem brandNew(OrderId orderId, ProductId productId, ProductName productName, Money price,
+    protected static OrderItem brandNew(OrderId orderId, ProductId productId, ProductName productName, Money price,
             Quantity quantity) {
 
         return new OrderItem(
