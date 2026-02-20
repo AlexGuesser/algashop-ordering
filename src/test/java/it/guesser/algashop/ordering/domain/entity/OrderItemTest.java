@@ -43,4 +43,80 @@ public class OrderItemTest {
         assertThatThrownBy(() -> OrderItem.brandNew(null, productId, productName, price, quantity))
                 .isInstanceOf(NullPointerException.class);
     }
+
+    @Test
+    void givenNullProductId_whenBrandNew_thenThrowsNullPointerException() {
+        OrderId orderId = new OrderId();
+        ProductName productName = new ProductName("Product 1");
+        Money price = new Money("10.50");
+        Quantity quantity = new Quantity(1);
+
+        assertThatThrownBy(() -> OrderItem.brandNew(orderId, null, productName, price, quantity))
+                .isInstanceOf(NullPointerException.class);
+    }
+
+    @Test
+    void givenNullProductName_whenBrandNew_thenThrowsNullPointerException() {
+        OrderId orderId = new OrderId();
+        ProductId productId = new ProductId();
+        Money price = new Money("10.50");
+        Quantity quantity = new Quantity(1);
+
+        assertThatThrownBy(() -> OrderItem.brandNew(orderId, productId, null, price, quantity))
+                .isInstanceOf(NullPointerException.class);
+    }
+
+    @Test
+    void givenNullPrice_whenBrandNew_thenThrowsNullPointerException() {
+        OrderId orderId = new OrderId();
+        ProductId productId = new ProductId();
+        ProductName productName = new ProductName("Product 1");
+        Quantity quantity = new Quantity(1);
+
+        assertThatThrownBy(() -> OrderItem.brandNew(orderId, productId, productName, null, quantity))
+                .isInstanceOf(NullPointerException.class);
+    }
+
+    @Test
+    void givenNullQuantity_whenBrandNew_thenThrowsNullPointerException() {
+        OrderId orderId = new OrderId();
+        ProductId productId = new ProductId();
+        ProductName productName = new ProductName("Product 1");
+        Money price = new Money("10.50");
+
+        assertThatThrownBy(() -> OrderItem.brandNew(orderId, productId, productName, price, null))
+                .isInstanceOf(NullPointerException.class);
+    }
+
+    @Test
+    void givenTwoOrderItems_whenCompareEqualsAndHashCode_thenContractIsFollowed() {
+        OrderId orderId = new OrderId();
+        ProductId productId = new ProductId();
+        ProductName productName = new ProductName("Product 1");
+        Money price = new Money("10.50");
+        Quantity quantity = new Quantity(1);
+
+        OrderItem orderItem1 = OrderItem.brandNew(orderId, productId, productName, price, quantity);
+        OrderItem orderItem2 = OrderItem.brandNew(orderId, productId, productName, price, quantity);
+
+        assertThat(orderItem1).isEqualTo(orderItem1);
+        assertThat(orderItem1.hashCode()).isEqualTo(orderItem1.hashCode());
+
+        assertThat(orderItem1).isNotEqualTo(orderItem2);
+    }
+
+    @Test
+    void givenOrderItem_whenCompareWithNullAndDifferentTypes_thenEqualsHandlesProperly() {
+        OrderId orderId = new OrderId();
+        ProductId productId = new ProductId();
+        ProductName productName = new ProductName("Product 1");
+        Money price = new Money("10.50");
+        Quantity quantity = new Quantity(1);
+
+        OrderItem orderItem = OrderItem.brandNew(orderId, productId, productName, price, quantity);
+
+        assertThat(orderItem).isNotEqualTo(null);
+        assertThat(orderItem).isNotEqualTo("some string");
+        assertThat(orderItem).isEqualTo(orderItem);
+    }
 }

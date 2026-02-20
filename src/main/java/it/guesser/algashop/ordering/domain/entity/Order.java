@@ -2,8 +2,10 @@ package it.guesser.algashop.ordering.domain.entity;
 
 import static java.util.Objects.requireNonNull;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.HashSet;
+import java.util.Optional;
 import java.util.Set;
 
 import it.guesser.algashop.ordering.domain.valueobject.BillingInfo;
@@ -20,8 +22,8 @@ public class Order {
     private OrderId id;
     private CustomerId customerId;
 
-    private Money totalAmount;
-    private Quantity totalItems;
+    private Money totalAmount = Money.ZERO;
+    private Quantity totalItems = Quantity.ZERO;
 
     private long placedAt;
     private long paidAt;
@@ -34,7 +36,7 @@ public class Order {
     private OrderStatus status;
     private PaymentMethod paymentMethod;
 
-    private Money shippingCost;
+    private Money shippingCost = Money.ZERO;
     private LocalDate expectedDeliveryDate;
 
     private Set<OrderItem> items = new HashSet<>();
@@ -54,7 +56,7 @@ public class Order {
         this.shippingInfo = shippingInfo;
         this.status = requireNonNull(status);
         this.paymentMethod = paymentMethod;
-        this.shippingCost = shippingCost;
+        this.shippingCost = requireNonNull(shippingCost);
         this.expectedDeliveryDate = expectedDeliveryDate;
         this.items = requireNonNull(items);
     }
@@ -73,7 +75,7 @@ public class Order {
                 null,
                 OrderStatus.DRAFT,
                 null,
-                null,
+                Money.ZERO,
                 null,
                 new HashSet<>());
 
@@ -136,7 +138,7 @@ public class Order {
     }
 
     public Set<OrderItem> getItems() {
-        return items;
+        return Set.copyOf(items);
     }
 
     private void setTotalAmount(Money totalAmount) {
@@ -190,10 +192,18 @@ public class Order {
     public void addItem(ProductId productId, ProductName productName, Money price,
             Quantity quantity) {
         OrderItem newOrderItem = OrderItem.brandNew(getId(), productId, productName, price, quantity);
-
         this.items.add(newOrderItem);
-        setTotalAmount(getTotalAmount().add(newOrderItem.getTotalAmount()));
-        setTotalItems(getTotalItems().add(quantity));
+        recalculateTotals();
+    }
+
+    private void recalculateTotals() {
+        BigDecimal newTotalItemsAmmount = getItems().stream().map(
+                i -> i.getTotalAmount().value()).reduce(BigDecimal.ZERO, BigDecimal::add);
+        Integer newTotalItems = getItems().stream().map(
+                i -> i.getQuantity().value()).reduce(0, Integer::sum);
+
+        setTotalAmount(new Money(newTotalItemsAmmount.add(getShippingCost().value())));
+        setTotalItems(new Quantity(newTotalItems));
     }
 
     @Override

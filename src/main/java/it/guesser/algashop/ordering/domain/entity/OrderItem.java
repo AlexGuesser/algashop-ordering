@@ -102,6 +102,10 @@ public class OrderItem {
         this.totalAmount = requireNonNull(totalAmount);
     }
 
+    private void recalculateTotals() {
+        setTotalAmount(getProductPrice().multiply(getQuantity()));
+    }
+
     @Override
     public int hashCode() {
         final int prime = 31;
