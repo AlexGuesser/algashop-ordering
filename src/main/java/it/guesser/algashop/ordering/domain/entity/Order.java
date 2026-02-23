@@ -3,11 +3,17 @@ package it.guesser.algashop.ordering.domain.entity;
 import static java.util.Objects.requireNonNull;
 
 import java.math.BigDecimal;
+import java.time.Instant;
 import java.time.LocalDate;
 import java.util.HashSet;
 import java.util.Optional;
 import java.util.Set;
 
+import org.apache.commons.collections.CollectionUtils;
+
+import it.guesser.algashop.ordering.domain.exceptions.OrderCannotBePlacedException;
+import it.guesser.algashop.ordering.domain.exceptions.OrderInvalidShippingDeliveryDateException;
+import it.guesser.algashop.ordering.domain.exceptions.OrderStatusCannotBeChangedException;
 import it.guesser.algashop.ordering.domain.valueobject.BillingInfo;
 import it.guesser.algashop.ordering.domain.valueobject.Money;
 import it.guesser.algashop.ordering.domain.valueobject.ProductName;
@@ -189,6 +195,48 @@ public class Order {
         this.expectedDeliveryDate = requireNonNull(expectedDeliveryDate);
     }
 
+    public boolean isDraft() {
+        return OrderStatus.DRAFT.equals(getStatus());
+    }
+
+    public boolean isPlaced() {
+        return OrderStatus.PLACED.equals(getStatus());
+    }
+
+    public boolean isPaid() {
+        return OrderStatus.PAID.equals(getStatus());
+    }
+
+    public void place() {
+        requireNonNull(getShippingInfo());
+        requireNonNull(getBillingInfo());
+        requireNonNull(getExpectedDeliveryDate());
+        requireNonNull(getShippingCost());
+        requireNonNull(getPaymentMethod());
+
+        if (CollectionUtils.isEmpty(getItems())) {
+            throw new OrderCannotBePlacedException(getId());
+        }
+
+        changeStatus(OrderStatus.PLACED);
+        setPlacedAt(Instant.now().toEpochMilli());
+
+    }
+
+    public void markAsPaid() {
+        changeStatus(OrderStatus.PAID);
+        setPaidAt(Instant.now().toEpochMilli());
+    }
+
+    private void changeStatus(OrderStatus newStatus) {
+        requireNonNull(newStatus);
+
+        if (getStatus().canNotChangeTo(newStatus)) {
+            throw new OrderStatusCannotBeChangedException(getId(), getStatus(), newStatus);
+        }
+        setStatus(newStatus);
+    }
+
     public void addItem(ProductId productId, ProductName productName, Money price,
             Quantity quantity) {
         OrderItem newOrderItem = OrderItem.brandNew(getId(), productId, productName, price, quantity);
@@ -204,6 +252,30 @@ public class Order {
 
         setTotalAmount(new Money(newTotalItemsAmmount.add(getShippingCost().value())));
         setTotalItems(new Quantity(newTotalItems));
+    }
+
+    public void changePaymentMethod(PaymentMethod newPaymentMethod) {
+        requireNonNull(newPaymentMethod);
+        setPaymentMethod(newPaymentMethod);
+    }
+
+    public void changeBilling(BillingInfo billingInfo) {
+        requireNonNull(billingInfo);
+        setBillingInfo(billingInfo);
+    }
+
+    public void changeShipping(ShippingInfo shippingInfo, Money shippingCost, LocalDate expectedDeliveryDate) {
+        requireNonNull(shippingInfo);
+        requireNonNull(shippingCost);
+        requireNonNull(expectedDeliveryDate);
+
+        if (expectedDeliveryDate.isBefore(LocalDate.now())) {
+            throw new OrderInvalidShippingDeliveryDateException(getId());
+        }
+
+        setShippingInfo(shippingInfo);
+        setShippingCost(shippingCost);
+        setExpectedDeliveryDate(expectedDeliveryDate);
     }
 
     @Override
