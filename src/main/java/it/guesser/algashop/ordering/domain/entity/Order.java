@@ -13,6 +13,7 @@ import org.apache.commons.collections.CollectionUtils;
 
 import it.guesser.algashop.ordering.domain.exceptions.OrderCannotBePlacedException;
 import it.guesser.algashop.ordering.domain.exceptions.OrderInvalidShippingDeliveryDateException;
+import it.guesser.algashop.ordering.domain.exceptions.OrderItemIdNotFoundInOrderException;
 import it.guesser.algashop.ordering.domain.exceptions.OrderStatusCannotBeChangedException;
 import it.guesser.algashop.ordering.domain.valueobject.BillingInfo;
 import it.guesser.algashop.ordering.domain.valueobject.Money;
@@ -21,7 +22,10 @@ import it.guesser.algashop.ordering.domain.valueobject.Quantity;
 import it.guesser.algashop.ordering.domain.valueobject.ShippingInfo;
 import it.guesser.algashop.ordering.domain.valueobject.id.CustomerId;
 import it.guesser.algashop.ordering.domain.valueobject.id.OrderId;
+import it.guesser.algashop.ordering.domain.valueobject.id.OrderItemId;
 import it.guesser.algashop.ordering.domain.valueobject.id.ProductId;
+
+import static it.guesser.algashop.ordering.domain.validator.FieldsValidation.requireNonNullDependency;
 
 public class Order {
 
@@ -208,19 +212,28 @@ public class Order {
     }
 
     public void place() {
-        requireNonNull(getShippingInfo());
-        requireNonNull(getBillingInfo());
-        requireNonNull(getExpectedDeliveryDate());
-        requireNonNull(getShippingCost());
-        requireNonNull(getPaymentMethod());
-
-        if (CollectionUtils.isEmpty(getItems())) {
-            throw new OrderCannotBePlacedException(getId());
-        }
+        validateIfCanBePlaced();
 
         changeStatus(OrderStatus.PLACED);
         setPlacedAt(Instant.now().toEpochMilli());
 
+    }
+
+    private void validateIfCanBePlaced() {
+        requireNonNullDependency(getShippingInfo(),
+                OrderCannotBePlacedException.noRequiredDependency(getId(), "shippingInfo"));
+        requireNonNullDependency(getBillingInfo(),
+                OrderCannotBePlacedException.noRequiredDependency(getId(), "billingInfo"));
+        requireNonNullDependency(getExpectedDeliveryDate(),
+                OrderCannotBePlacedException.noRequiredDependency(getId(), "expectedDeliveryDate"));
+        requireNonNullDependency(getShippingCost(),
+                OrderCannotBePlacedException.noRequiredDependency(getId(), "shippingCost"));
+        requireNonNullDependency(getPaymentMethod(),
+                OrderCannotBePlacedException.noRequiredDependency(getId(), "paymentMethod"));
+
+        if (CollectionUtils.isEmpty(getItems())) {
+            throw OrderCannotBePlacedException.noItems(getId());
+        }
     }
 
     public void markAsPaid() {
@@ -276,6 +289,25 @@ public class Order {
         setShippingInfo(shippingInfo);
         setShippingCost(shippingCost);
         setExpectedDeliveryDate(expectedDeliveryDate);
+    }
+
+    void changeItemQuantity(OrderItemId orderItemId, Quantity newQuantity) {
+        requireNonNull(orderItemId);
+        requireNonNull(newQuantity);
+
+        OrderItem orderItem = findOrderItemBy(orderItemId);
+        orderItem.changeQuantity(newQuantity);
+
+        recalculateTotals();
+    }
+
+    private OrderItem findOrderItemBy(OrderItemId orderItemId) {
+        requireNonNull(orderItemId);
+
+        return getItems().stream()
+                .filter(oi -> oi.getId().equals(orderItemId))
+                .findFirst()
+                .orElseThrow(() -> new OrderItemIdNotFoundInOrderException(orderItemId, getId()));
     }
 
     @Override

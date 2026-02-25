@@ -154,6 +154,67 @@ public class OrderTest {
 
     @Test
     void givenDraftOrder_whenPlace_shouldChangeToPlaced() {
+        Order order = anOrder().withStatus(OrderStatus.DRAFT).build();
+
+        order.place();
+
+        assertThat(order.isPlaced()).isTrue();
+
+        // IF THE STATUS IS ALREADY PLACED THE ORDER CANNOT BE PLACED AGAIN
+        assertThatThrownBy(order::place)
+                .isInstanceOf(OrderStatusCannotBeChangedException.class)
+                .hasMessageContaining("Cannot change order")
+                .hasMessageContaining("from PLACED to PLACED");
+    }
+
+    @Test
+    void givenDraftOrderWithoutItems_whenPlace_shouldThrowOrderCannotBePlacedException() {
+        Order order = anOrder().withStatus(OrderStatus.DRAFT).withItems(false).build();
+
+        assertThatThrownBy(order::place)
+                .isInstanceOf(OrderCannotBePlacedException.class)
+                .hasMessageContaining("cannot be placed because has no items");
+    }
+
+    @Test
+    void givenOrderWithItemsButWithoutShipping_whenPlace_shouldThrowOrderCannotBePlacedException() {
+        CustomerId customerId = new CustomerId();
+        Order order = Order.draft(customerId);
+
+        order.addItem(new ProductId(), new ProductName("Product 1"), new Money("10.00"), new Quantity(1));
+
+        BillingInfo billingInfo = aBillingInfo();
+        order.changeBilling(billingInfo);
+        order.changePaymentMethod(PaymentMethod.CREDIT_CARD);
+
+        assertThatThrownBy(order::place)
+                .isInstanceOf(OrderCannotBePlacedException.class)
+                .hasMessageContaining("cannot be placed because has no required dependency")
+                .hasMessageContaining("shippingInfo");
+    }
+
+    @Test
+    void givenOrderWithItemsButWithoutBilling_whenPlace_shouldThrowOrderCannotBePlacedException() {
+        CustomerId customerId = new CustomerId();
+        Order order = Order.draft(customerId);
+
+        order.addItem(new ProductId(), new ProductName("Product 1"), new Money("10.00"), new Quantity(1));
+
+        ShippingInfo shippingInfo = aShippingInfo();
+        Money shippingCost = new Money("5.00");
+        LocalDate expectedDeliveryDate = LocalDate.now().plusDays(3);
+
+        order.changeShipping(shippingInfo, shippingCost, expectedDeliveryDate);
+        order.changePaymentMethod(PaymentMethod.CREDIT_CARD);
+
+        assertThatThrownBy(order::place)
+                .isInstanceOf(OrderCannotBePlacedException.class)
+                .hasMessageContaining("cannot be placed because has no required dependency")
+                .hasMessageContaining("billingInfo");
+    }
+
+    @Test
+    void givenOrderWithItemsButWithoutPaymentMethod_whenPlace_shouldThrowOrderCannotBePlacedException() {
         CustomerId customerId = new CustomerId();
         Order order = Order.draft(customerId);
 
@@ -166,33 +227,36 @@ public class OrderTest {
 
         order.changeBilling(billingInfo);
         order.changeShipping(shippingInfo, shippingCost, expectedDeliveryDate);
-        order.changePaymentMethod(PaymentMethod.CREDIT_CARD);
+
+        assertThatThrownBy(order::place)
+                .isInstanceOf(OrderCannotBePlacedException.class)
+                .hasMessageContaining("cannot be placed because has no required dependency")
+                .hasMessageContaining("paymentMethod");
+    }
+
+    @Test
+    void givenValidDraftOrder_whenPlace_setsPlacedAtAndKeepsTotals() {
+        Order order = anOrder().withStatus(OrderStatus.DRAFT).build();
+
+        Money totalAmountBeforePlace = order.getTotalAmount();
+        Quantity totalItemsBeforePlace = order.getTotalItems();
 
         order.place();
 
         assertThat(order.isPlaced()).isTrue();
-
-        // IF THE STATUS IS ALREADY PLACED THE ORDER CANNOT BE PLACED AGAIN
-        assertThatThrownBy(
-                () -> order.place()).isInstanceOf(OrderStatusCannotBeChangedException.class);
+        assertThat(order.getPlacedAt()).isNotZero();
+        assertThat(order.getTotalAmount()).isEqualTo(totalAmountBeforePlace);
+        assertThat(order.getTotalItems()).isEqualTo(totalItemsBeforePlace);
     }
 
     @Test
-    void givenDraftOrderWithoutItems_whenPlace_shouldThrowOrderCannotBePlacedException() {
-        CustomerId customerId = new CustomerId();
-        Order order = Order.draft(customerId);
-
-        BillingInfo billingInfo = aBillingInfo();
-        ShippingInfo shippingInfo = aShippingInfo();
-        Money shippingCost = new Money("5.00");
-        LocalDate expectedDeliveryDate = LocalDate.now().plusDays(3);
-
-        order.changeBilling(billingInfo);
-        order.changeShipping(shippingInfo, shippingCost, expectedDeliveryDate);
-        order.changePaymentMethod(PaymentMethod.CREDIT_CARD);
+    void givenPaidOrder_whenPlace_shouldThrowOrderStatusCannotBeChangedException() {
+        Order order = anOrder().withStatus(OrderStatus.PAID).build();
 
         assertThatThrownBy(order::place)
-                .isInstanceOf(OrderCannotBePlacedException.class);
+                .isInstanceOf(OrderStatusCannotBeChangedException.class)
+                .hasMessageContaining("Cannot change order")
+                .hasMessageContaining("from PAID to PLACED");
     }
 
     // --- changePaymentMethod ---
@@ -318,5 +382,30 @@ public class OrderTest {
 
         assertThat(order.getStatus()).isEqualTo(OrderStatus.PAID);
         assertThat(order.getPaidAt()).isNotZero();
+    }
+
+    @Test
+    void givenValidDraftOrder_whenChangeQuantity_thenQuantityIsChangedAndTotalsAreRecalculated() {
+        Order order = anOrder().withStatus(OrderStatus.DRAFT).withItems(false).build();
+        assertThat(order.getItems()).isEmpty();
+        assertThat(order.getTotalItems()).isEqualTo(Quantity.ZERO);
+        assertThat(order.getTotalAmount()).isEqualTo(Money.ZERO);
+
+        order.addItem(new ProductId(), new ProductName("Product 1"), new Money("10.00"), new Quantity(1));
+        assertThat(order.getItems()).isNotEmpty();
+        assertThat(order.getTotalItems()).isEqualTo(new Quantity(1));
+        assertThat(order.getTotalAmount()).isEqualTo(new Money("10.00"));
+        OrderItem orderItem = order.getItems().stream().findFirst().orElseThrow();
+        assertThat(orderItem.getQuantity()).isEqualTo(new Quantity(1));
+        assertThat(orderItem.getTotalAmount()).isEqualTo(new Money("10.00"));
+
+
+        order.changeItemQuantity(orderItem.getId(), new Quantity(2));
+
+        assertThat(order.getItems()).isNotEmpty();
+        assertThat(order.getTotalItems()).isEqualTo(new Quantity(2));
+        assertThat(order.getTotalAmount()).isEqualTo(new Money("20.00"));
+        assertThat(orderItem.getQuantity()).isEqualTo(new Quantity(2));
+        assertThat(orderItem.getTotalAmount()).isEqualTo(new Money("20.00"));
     }
 }

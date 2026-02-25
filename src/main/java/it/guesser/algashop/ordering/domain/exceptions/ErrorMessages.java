@@ -8,6 +8,8 @@ public class ErrorMessages {
     public static final String BIRTH_DATE_IN_FUTURE = "Birth date cannot be in the future";
     public static final String STATUS_CHANGE_NOT_ALLOWED = "Cannot change order %s status from %s to %s";
     public static final String ORDER_DELIVER_DATE_CANNOT_BE_IN_THE_PAST = "Order:%s cannot have a delivery date in the past";
-    public static final String ORDER_CANNOT_BE_PLACED = "Order: %s cannot be placed because has no items";
+    public static final String ORDER_CANNOT_BE_PLACED_NO_ITEMS = "Order: %s cannot be placed because has no items";
+    public static final String ORDER_CANNOT_BE_PLACED_NO_REQUIRED_DEPENDENCY = "Order: %s cannot be placed because has no required dependency: %s";
+    public static final String ORDER_ITEM_NOT_FOUND_IN_ORDER = "OrderItem: %s not found inside order: %s";
 
 }

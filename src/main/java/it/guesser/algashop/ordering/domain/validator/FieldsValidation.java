@@ -29,4 +29,9 @@ public class FieldsValidation {
         return email;
     }
 
+    public static void requireNonNullDependency(Object object, RuntimeException exception) {
+        if (object == null) {
+            throw exception;
+        }
+    }
 }

@@ -21,7 +21,7 @@ public class OrderTestDataBuilder {
 
     private CustomerId customerId = new CustomerId();
     private PaymentMethod paymentMethod = PaymentMethod.GATEWAY_BALANCE;
-    private Money shippingCost = new Money("10.00");
+    private Money shippingCost = Money.ZERO;
     private LocalDate expectedDeliveryDate = LocalDate.now().plusWeeks(1);
     private ShippingInfo shippingInfo = aShippingInfo();
     private BillingInfo billingInfo = aBillingInfo();

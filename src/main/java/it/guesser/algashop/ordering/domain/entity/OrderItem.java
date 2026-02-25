@@ -98,6 +98,11 @@ public class OrderItem {
         this.quantity = requireNonNull(quantity);
     }
 
+    public void changeQuantity(Quantity quantity) {
+        setQuantity(quantity);
+        recalculateTotals();
+    }
+
     private void setTotalAmount(Money totalAmount) {
         this.totalAmount = requireNonNull(totalAmount);
     }
