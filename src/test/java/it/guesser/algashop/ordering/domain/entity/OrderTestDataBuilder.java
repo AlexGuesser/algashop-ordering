@@ -10,6 +10,7 @@ import it.guesser.algashop.ordering.domain.valueobject.Document;
 import it.guesser.algashop.ordering.domain.valueobject.FullName;
 import it.guesser.algashop.ordering.domain.valueobject.Money;
 import it.guesser.algashop.ordering.domain.valueobject.Phone;
+import it.guesser.algashop.ordering.domain.valueobject.Product;
 import it.guesser.algashop.ordering.domain.valueobject.ProductName;
 import it.guesser.algashop.ordering.domain.valueobject.Quantity;
 import it.guesser.algashop.ordering.domain.valueobject.ShippingInfo;
@@ -83,8 +84,10 @@ public class OrderTestDataBuilder {
         order.changePaymentMethod(paymentMethod);
 
         if (withItems) {
-            order.addItem(new ProductId(), new ProductName("Product"), new Money("100.00"), new Quantity(2));
-            order.addItem(new ProductId(), new ProductName("Product 2"), new Money("200.00"), new Quantity(1));
+            order.addItem(new Product(new ProductId(), new ProductName("Product"), new Money("100.00"), true),
+                    new Quantity(2));
+            order.addItem(new Product(new ProductId(), new ProductName("Product 2"), new Money("200.00"), true),
+                    new Quantity(1));
         }
 
         switch (status) {

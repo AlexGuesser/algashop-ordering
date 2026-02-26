@@ -4,6 +4,7 @@ import it.guesser.algashop.ordering.domain.valueobject.id.OrderId;
 import it.guesser.algashop.ordering.domain.valueobject.id.OrderItemId;
 import it.guesser.algashop.ordering.domain.valueobject.id.ProductId;
 import it.guesser.algashop.ordering.domain.valueobject.Money;
+import it.guesser.algashop.ordering.domain.valueobject.Product;
 import it.guesser.algashop.ordering.domain.valueobject.ProductName;
 import it.guesser.algashop.ordering.domain.valueobject.Quantity;
 
@@ -33,17 +34,20 @@ public class OrderItem {
         this.totalAmount = requireNonNull(totalAmount);
     }
 
-    protected static OrderItem brandNew(OrderId orderId, ProductId productId, ProductName productName, Money price,
+    protected static OrderItem brandNew(OrderId orderId, Product product,
             Quantity quantity) {
+        requireNonNull(orderId);
+        requireNonNull(product);
+        requireNonNull(quantity);
 
         return new OrderItem(
                 new OrderItemId(),
                 orderId,
-                productId,
-                productName,
-                price,
+                product.id(),
+                product.name(),
+                product.price(),
                 quantity,
-                price.multiply(quantity));
+                product.price().multiply(quantity));
     }
 
     public OrderItemId getId() {

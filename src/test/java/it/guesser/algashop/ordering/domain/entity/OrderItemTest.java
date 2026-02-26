@@ -6,6 +6,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import org.junit.jupiter.api.Test;
 
 import it.guesser.algashop.ordering.domain.valueobject.Money;
+import it.guesser.algashop.ordering.domain.valueobject.Product;
 import it.guesser.algashop.ordering.domain.valueobject.ProductName;
 import it.guesser.algashop.ordering.domain.valueobject.Quantity;
 import it.guesser.algashop.ordering.domain.valueobject.id.OrderId;
@@ -21,7 +22,9 @@ public class OrderItemTest {
         Money price = new Money("10.50");
         Quantity quantity = new Quantity(3);
 
-        OrderItem orderItem = OrderItem.brandNew(orderId, productId, productName, price, quantity);
+        Product product = new Product(productId, productName, price, true);
+
+        OrderItem orderItem = OrderItem.brandNew(orderId, product, quantity);
 
         assertThat(orderItem.getId()).isNotNull();
         assertThat(orderItem.getOrderId()).isEqualTo(orderId);
@@ -40,40 +43,9 @@ public class OrderItemTest {
         Money price = new Money("10.50");
         Quantity quantity = new Quantity(1);
 
-        assertThatThrownBy(() -> OrderItem.brandNew(null, productId, productName, price, quantity))
-                .isInstanceOf(NullPointerException.class);
-    }
+        Product product = new Product(productId, productName, price, true);
 
-    @Test
-    void givenNullProductId_whenBrandNew_thenThrowsNullPointerException() {
-        OrderId orderId = new OrderId();
-        ProductName productName = new ProductName("Product 1");
-        Money price = new Money("10.50");
-        Quantity quantity = new Quantity(1);
-
-        assertThatThrownBy(() -> OrderItem.brandNew(orderId, null, productName, price, quantity))
-                .isInstanceOf(NullPointerException.class);
-    }
-
-    @Test
-    void givenNullProductName_whenBrandNew_thenThrowsNullPointerException() {
-        OrderId orderId = new OrderId();
-        ProductId productId = new ProductId();
-        Money price = new Money("10.50");
-        Quantity quantity = new Quantity(1);
-
-        assertThatThrownBy(() -> OrderItem.brandNew(orderId, productId, null, price, quantity))
-                .isInstanceOf(NullPointerException.class);
-    }
-
-    @Test
-    void givenNullPrice_whenBrandNew_thenThrowsNullPointerException() {
-        OrderId orderId = new OrderId();
-        ProductId productId = new ProductId();
-        ProductName productName = new ProductName("Product 1");
-        Quantity quantity = new Quantity(1);
-
-        assertThatThrownBy(() -> OrderItem.brandNew(orderId, productId, productName, null, quantity))
+        assertThatThrownBy(() -> OrderItem.brandNew(null, product, quantity))
                 .isInstanceOf(NullPointerException.class);
     }
 
@@ -84,7 +56,9 @@ public class OrderItemTest {
         ProductName productName = new ProductName("Product 1");
         Money price = new Money("10.50");
 
-        assertThatThrownBy(() -> OrderItem.brandNew(orderId, productId, productName, price, null))
+        Product product = new Product(productId, productName, price, true);
+
+        assertThatThrownBy(() -> OrderItem.brandNew(orderId, product, null))
                 .isInstanceOf(NullPointerException.class);
     }
 
@@ -96,8 +70,10 @@ public class OrderItemTest {
         Money price = new Money("10.50");
         Quantity quantity = new Quantity(1);
 
-        OrderItem orderItem1 = OrderItem.brandNew(orderId, productId, productName, price, quantity);
-        OrderItem orderItem2 = OrderItem.brandNew(orderId, productId, productName, price, quantity);
+        Product product = new Product(productId, productName, price, true);
+
+        OrderItem orderItem1 = OrderItem.brandNew(orderId, product, quantity);
+        OrderItem orderItem2 = OrderItem.brandNew(orderId, product, quantity);
 
         assertThat(orderItem1).isEqualTo(orderItem1);
         assertThat(orderItem1.hashCode()).isEqualTo(orderItem1.hashCode());
@@ -113,7 +89,9 @@ public class OrderItemTest {
         Money price = new Money("10.50");
         Quantity quantity = new Quantity(1);
 
-        OrderItem orderItem = OrderItem.brandNew(orderId, productId, productName, price, quantity);
+        Product product = new Product(productId, productName, price, true);
+
+        OrderItem orderItem = OrderItem.brandNew(orderId, product, quantity);
 
         assertThat(orderItem).isNotEqualTo(null);
         assertThat(orderItem).isNotEqualTo("some string");

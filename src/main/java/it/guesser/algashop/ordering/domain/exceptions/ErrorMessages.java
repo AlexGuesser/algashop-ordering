@@ -11,5 +11,6 @@ public class ErrorMessages {
     public static final String ORDER_CANNOT_BE_PLACED_NO_ITEMS = "Order: %s cannot be placed because has no items";
     public static final String ORDER_CANNOT_BE_PLACED_NO_REQUIRED_DEPENDENCY = "Order: %s cannot be placed because has no required dependency: %s";
     public static final String ORDER_ITEM_NOT_FOUND_IN_ORDER = "OrderItem: %s not found inside order: %s";
+    public static final String PRODUCT_OUT_OF_STOCK = "Product: %s is out of stock";
 
 }

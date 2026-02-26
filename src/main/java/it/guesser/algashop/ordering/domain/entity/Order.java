@@ -17,6 +17,7 @@ import it.guesser.algashop.ordering.domain.exceptions.OrderItemIdNotFoundInOrder
 import it.guesser.algashop.ordering.domain.exceptions.OrderStatusCannotBeChangedException;
 import it.guesser.algashop.ordering.domain.valueobject.BillingInfo;
 import it.guesser.algashop.ordering.domain.valueobject.Money;
+import it.guesser.algashop.ordering.domain.valueobject.Product;
 import it.guesser.algashop.ordering.domain.valueobject.ProductName;
 import it.guesser.algashop.ordering.domain.valueobject.Quantity;
 import it.guesser.algashop.ordering.domain.valueobject.ShippingInfo;
@@ -250,9 +251,12 @@ public class Order {
         setStatus(newStatus);
     }
 
-    public void addItem(ProductId productId, ProductName productName, Money price,
-            Quantity quantity) {
-        OrderItem newOrderItem = OrderItem.brandNew(getId(), productId, productName, price, quantity);
+    public void addItem(Product product, Quantity quantity) {
+        requireNonNull(product);
+        requireNonNull(quantity);
+        product.checkOutOfStock();
+
+        OrderItem newOrderItem = OrderItem.brandNew(getId(), product, quantity);
         this.items.add(newOrderItem);
         recalculateTotals();
     }

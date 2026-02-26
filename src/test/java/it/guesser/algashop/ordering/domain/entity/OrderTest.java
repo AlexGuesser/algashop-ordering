@@ -11,14 +11,18 @@ import org.junit.jupiter.api.Test;
 import it.guesser.algashop.ordering.domain.exceptions.OrderCannotBePlacedException;
 import it.guesser.algashop.ordering.domain.exceptions.OrderInvalidShippingDeliveryDateException;
 import it.guesser.algashop.ordering.domain.exceptions.OrderStatusCannotBeChangedException;
+import it.guesser.algashop.ordering.domain.exceptions.ProductOutOfStockException;
 import it.guesser.algashop.ordering.domain.valueobject.BillingInfo;
 import it.guesser.algashop.ordering.domain.valueobject.Money;
+import it.guesser.algashop.ordering.domain.valueobject.Product;
 import it.guesser.algashop.ordering.domain.valueobject.ProductName;
 import it.guesser.algashop.ordering.domain.valueobject.Quantity;
 import it.guesser.algashop.ordering.domain.valueobject.ShippingInfo;
 import it.guesser.algashop.ordering.domain.valueobject.id.CustomerId;
 import it.guesser.algashop.ordering.domain.valueobject.id.ProductId;
 import static it.guesser.algashop.ordering.domain.entity.OrderTestDataBuilder.*;
+import static it.guesser.algashop.ordering.domain.valueobject.ProductDataTestBuilder.aProductInStock;
+import static it.guesser.algashop.ordering.domain.valueobject.ProductDataTestBuilder.aProductOutOfStock;
 
 public class OrderTest {
 
@@ -67,6 +71,16 @@ public class OrderTest {
     }
 
     @Test
+    void givenValidDraftOrder_whenAddingItemWithProductOutOfStock_thenExceptionIsThrown() {
+        Order order = anOrder().withStatus(OrderStatus.DRAFT).withItems(false).build();
+
+        assertThatThrownBy(
+                () -> order.addItem(aProductOutOfStock(), new Quantity(1)))
+                .isInstanceOf(ProductOutOfStockException.class);
+
+    }
+
+    @Test
     void givenValidItemData_whenAddItem_thenOrderAndItemAreUpdatedCorrectly() {
         CustomerId customerId = new CustomerId();
         Order order = Order.draft(customerId);
@@ -76,7 +90,9 @@ public class OrderTest {
         Money price = new Money("10.00");
         Quantity quantity = new Quantity(2);
 
-        order.addItem(productId, productName, price, quantity);
+        Product product = new Product(productId, productName, price, true);
+
+        order.addItem(product, quantity);
 
         assertThat(order.getItems()).hasSize(1);
         assertThat(order.getTotalItems()).isEqualTo(quantity);
@@ -101,8 +117,8 @@ public class OrderTest {
         Money price2 = new Money("7.50");
         Quantity quantity2 = new Quantity(2);
 
-        order.addItem(new ProductId(), new ProductName("Product 1"), price1, quantity1);
-        order.addItem(new ProductId(), new ProductName("Product 2"), price2, quantity2);
+        order.addItem(new Product(new ProductId(), new ProductName("Product 1"), price1, true), quantity1);
+        order.addItem(new Product(new ProductId(), new ProductName("Product 2"), price2, true), quantity2);
 
         Money expectedTotalAmount = price1.multiply(quantity1).add(price2.multiply(quantity2));
         Quantity expectedTotalItems = new Quantity(quantity1.value() + quantity2.value());
@@ -118,7 +134,7 @@ public class OrderTest {
         Order order = Order.draft(customerId);
 
         assertThatThrownBy(
-                () -> order.addItem(null, new ProductName("Product 1"), new Money("10.00"), new Quantity(1)))
+                () -> order.addItem(null, new Quantity(1)))
                 .isInstanceOf(NullPointerException.class);
     }
 
@@ -127,18 +143,9 @@ public class OrderTest {
         CustomerId customerId = new CustomerId();
         Order order = Order.draft(customerId);
 
-        assertThatThrownBy(
-                () -> order.addItem(new ProductId(), null, new Money("10.00"), new Quantity(1)))
-                .isInstanceOf(NullPointerException.class);
-    }
-
-    @Test
-    void givenNullPrice_whenAddItem_thenThrowsNullPointerException() {
-        CustomerId customerId = new CustomerId();
-        Order order = Order.draft(customerId);
-
-        assertThatThrownBy(
-                () -> order.addItem(new ProductId(), new ProductName("Product 1"), null, new Quantity(1)))
+        assertThatThrownBy(() -> order.addItem(
+                new Product(new ProductId(), null, new Money("10.00"), true),
+                new Quantity(1)))
                 .isInstanceOf(NullPointerException.class);
     }
 
@@ -148,7 +155,9 @@ public class OrderTest {
         Order order = Order.draft(customerId);
 
         assertThatThrownBy(
-                () -> order.addItem(new ProductId(), new ProductName("Product 1"), new Money("10.00"), null))
+                () -> order.addItem(
+                        new Product(new ProductId(), new ProductName("Product 1"), new Money("10.00"), true),
+                        null))
                 .isInstanceOf(NullPointerException.class);
     }
 
@@ -181,7 +190,8 @@ public class OrderTest {
         CustomerId customerId = new CustomerId();
         Order order = Order.draft(customerId);
 
-        order.addItem(new ProductId(), new ProductName("Product 1"), new Money("10.00"), new Quantity(1));
+        order.addItem(new Product(new ProductId(), new ProductName("Product 1"), new Money("10.00"), true),
+                new Quantity(1));
 
         BillingInfo billingInfo = aBillingInfo();
         order.changeBilling(billingInfo);
@@ -198,7 +208,8 @@ public class OrderTest {
         CustomerId customerId = new CustomerId();
         Order order = Order.draft(customerId);
 
-        order.addItem(new ProductId(), new ProductName("Product 1"), new Money("10.00"), new Quantity(1));
+        order.addItem(new Product(new ProductId(), new ProductName("Product 1"), new Money("10.00"), true),
+                new Quantity(1));
 
         ShippingInfo shippingInfo = aShippingInfo();
         Money shippingCost = new Money("5.00");
@@ -218,7 +229,8 @@ public class OrderTest {
         CustomerId customerId = new CustomerId();
         Order order = Order.draft(customerId);
 
-        order.addItem(new ProductId(), new ProductName("Product 1"), new Money("10.00"), new Quantity(1));
+        order.addItem(new Product(new ProductId(), new ProductName("Product 1"), new Money("10.00"), true),
+                new Quantity(1));
 
         BillingInfo billingInfo = aBillingInfo();
         ShippingInfo shippingInfo = aShippingInfo();
@@ -391,14 +403,13 @@ public class OrderTest {
         assertThat(order.getTotalItems()).isEqualTo(Quantity.ZERO);
         assertThat(order.getTotalAmount()).isEqualTo(Money.ZERO);
 
-        order.addItem(new ProductId(), new ProductName("Product 1"), new Money("10.00"), new Quantity(1));
+        order.addItem(aProductInStock(), new Quantity(1));
         assertThat(order.getItems()).isNotEmpty();
         assertThat(order.getTotalItems()).isEqualTo(new Quantity(1));
         assertThat(order.getTotalAmount()).isEqualTo(new Money("10.00"));
         OrderItem orderItem = order.getItems().stream().findFirst().orElseThrow();
         assertThat(orderItem.getQuantity()).isEqualTo(new Quantity(1));
         assertThat(orderItem.getTotalAmount()).isEqualTo(new Money("10.00"));
-
 
         order.changeItemQuantity(orderItem.getId(), new Quantity(2));
 
