@@ -12,17 +12,18 @@ import it.guesser.algashop.ordering.domain.exceptions.OrderCannotBePlacedExcepti
 import it.guesser.algashop.ordering.domain.exceptions.OrderInvalidShippingDeliveryDateException;
 import it.guesser.algashop.ordering.domain.exceptions.OrderStatusCannotBeChangedException;
 import it.guesser.algashop.ordering.domain.exceptions.ProductOutOfStockException;
-import it.guesser.algashop.ordering.domain.valueobject.BillingInfo;
+import it.guesser.algashop.ordering.domain.valueobject.Billing;
 import it.guesser.algashop.ordering.domain.valueobject.Money;
 import it.guesser.algashop.ordering.domain.valueobject.Product;
 import it.guesser.algashop.ordering.domain.valueobject.ProductName;
 import it.guesser.algashop.ordering.domain.valueobject.Quantity;
-import it.guesser.algashop.ordering.domain.valueobject.ShippingInfo;
+import it.guesser.algashop.ordering.domain.valueobject.Shipping;
 import it.guesser.algashop.ordering.domain.valueobject.id.CustomerId;
 import it.guesser.algashop.ordering.domain.valueobject.id.ProductId;
 import static it.guesser.algashop.ordering.domain.entity.OrderTestDataBuilder.*;
 import static it.guesser.algashop.ordering.domain.valueobject.ProductDataTestBuilder.aProductInStock;
 import static it.guesser.algashop.ordering.domain.valueobject.ProductDataTestBuilder.aProductOutOfStock;
+import static it.guesser.algashop.ordering.domain.valueobject.ShippingTestDataBuilder.*;
 
 public class OrderTest {
 
@@ -42,11 +43,9 @@ public class OrderTest {
                     assertThat(o.getPaidAt()).isZero();
                     assertThat(o.getCanceledAt()).isZero();
                     assertThat(o.getReadyAt()).isZero();
-                    assertThat(o.getBillingInfo()).isNull();
-                    assertThat(o.getShippingInfo()).isNull();
+                    assertThat(o.getBilling()).isNull();
+                    assertThat(o.getShipping()).isNull();
                     assertThat(o.getPaymentMethod()).isNull();
-                    assertThat(o.getShippingCost()).isEqualTo(Money.ZERO);
-                    assertThat(o.getExpectedDeliveryDate()).isNull();
                     assertThat(o.getStatus()).isEqualTo(OrderStatus.DRAFT);
                     assertThat(o.getItems()).isNotNull();
                     assertThat(o.getItems()).isEmpty();
@@ -193,14 +192,14 @@ public class OrderTest {
         order.addItem(new Product(new ProductId(), new ProductName("Product 1"), new Money("10.00"), true),
                 new Quantity(1));
 
-        BillingInfo billingInfo = aBillingInfo();
+        Billing billingInfo = aBilling();
         order.changeBilling(billingInfo);
         order.changePaymentMethod(PaymentMethod.CREDIT_CARD);
 
         assertThatThrownBy(order::place)
                 .isInstanceOf(OrderCannotBePlacedException.class)
                 .hasMessageContaining("cannot be placed because has no required dependency")
-                .hasMessageContaining("shippingInfo");
+                .hasMessageContaining("shipping");
     }
 
     @Test
@@ -211,11 +210,9 @@ public class OrderTest {
         order.addItem(new Product(new ProductId(), new ProductName("Product 1"), new Money("10.00"), true),
                 new Quantity(1));
 
-        ShippingInfo shippingInfo = aShippingInfo();
-        Money shippingCost = new Money("5.00");
-        LocalDate expectedDeliveryDate = LocalDate.now().plusDays(3);
+        Shipping shipping = aShipping().build();
 
-        order.changeShipping(shippingInfo, shippingCost, expectedDeliveryDate);
+        order.changeShipping(shipping);
         order.changePaymentMethod(PaymentMethod.CREDIT_CARD);
 
         assertThatThrownBy(order::place)
@@ -232,13 +229,11 @@ public class OrderTest {
         order.addItem(new Product(new ProductId(), new ProductName("Product 1"), new Money("10.00"), true),
                 new Quantity(1));
 
-        BillingInfo billingInfo = aBillingInfo();
-        ShippingInfo shippingInfo = aShippingInfo();
-        Money shippingCost = new Money("5.00");
-        LocalDate expectedDeliveryDate = LocalDate.now().plusDays(3);
+        Billing billingInfo = aBilling();
+        Shipping shipping = aShipping().build();
 
         order.changeBilling(billingInfo);
-        order.changeShipping(shippingInfo, shippingCost, expectedDeliveryDate);
+        order.changeShipping(shipping);
 
         assertThatThrownBy(order::place)
                 .isInstanceOf(OrderCannotBePlacedException.class)
@@ -299,22 +294,21 @@ public class OrderTest {
     // --- changeBilling ---
 
     @Test
-    void givenValidBillingInfo_whenChangeBilling_thenBillingInfoIsUpdated() {
+    void givenValidBilling_whenChangeBilling_thenBillingInfoIsUpdated() {
         CustomerId customerId = new CustomerId();
         Order order = Order.draft(customerId);
-        BillingInfo billingInfo = billingInfo("John Doe", "12345678901", "555-1234",
-                "Main St", "Apt 1", "Downtown", "City", "ST", "12345");
+        Billing billing = aBilling();
 
-        order.changeBilling(billingInfo);
+        order.changeBilling(billing);
 
-        assertThat(order.getBillingInfo()).isEqualTo(billingInfo);
+        assertThat(order.getBilling()).isEqualTo(billing);
 
-        BillingInfo otherBillingInfo = billingInfo("Jane Doe", "98765432109", "555-9999",
-                "Oak Ave", null, "Suburbs", "Town", "CA", "54321");
+        Billing otherBillingInfo = billing("Jane Doe", "98765432109", "555-9999",
+                anAddress(), anEmail());
 
         order.changeBilling(otherBillingInfo);
 
-        assertThat(order.getBillingInfo()).isEqualTo(otherBillingInfo);
+        assertThat(order.getBilling()).isEqualTo(otherBillingInfo);
     }
 
     @Test
@@ -329,58 +323,68 @@ public class OrderTest {
     // --- changeShipping ---
 
     @Test
-    void givenValidShippingData_whenChangeShipping_thenShippingInfoCostAndDateAreUpdated() {
+    void givenValidShippingData_whenChangeShipping_thenShippingIsUpdated() {
         CustomerId customerId = new CustomerId();
         Order order = Order.draft(customerId);
-        ShippingInfo shippingInfo = aShippingInfo();
-        Money shippingCost = new Money("9.99");
-        LocalDate expectedDeliveryDate = LocalDate.now().plusDays(5);
+        assertThat(order.getShipping()).isNull();
 
-        order.changeShipping(shippingInfo, shippingCost, expectedDeliveryDate);
+        Shipping shipping = aShipping().build();
+        order.changeShipping(shipping);
 
-        assertThat(order.getShippingInfo()).isEqualTo(shippingInfo);
-        assertThat(order.getShippingCost()).isEqualTo(shippingCost);
-        assertThat(order.getExpectedDeliveryDate()).isEqualTo(expectedDeliveryDate);
+        assertThat(order.getShipping()).isEqualTo(shipping);
+    }
+
+    @Test
+    void givenOrderWithItems_whenChangeShipping_thenTotalAmountIncludesShippingCost() {
+        Order order = anOrder().withStatus(OrderStatus.DRAFT).build();
+        Money itemsTotalAmount = order.getTotalAmount();
+
+        Money shippingCost = new Money("10.00");
+        Shipping shipping = aShipping().withCost(shippingCost).build();
+
+        order.changeShipping(shipping);
+
+        Money expectedTotalAmount = itemsTotalAmount.add(shippingCost);
+
+        assertThat(order.getShipping()).isEqualTo(shipping);
+        assertThat(order.getTotalAmount()).isEqualTo(expectedTotalAmount);
+    }
+
+    @Test
+    void givenOrderWithItems_whenChangeShippingMultipleTimes_thenTotalAmountIsRecalculatedWithLatestShippingCost() {
+        Order order = anOrder().withStatus(OrderStatus.DRAFT).build();
+        Money itemsTotalAmount = order.getTotalAmount();
+
+        Money firstShippingCost = new Money("10.00");
+        Shipping firstShipping = aShipping().withCost(firstShippingCost).build();
+        order.changeShipping(firstShipping);
+
+        Money secondShippingCost = new Money("20.00");
+        Shipping secondShipping = aShipping().withCost(secondShippingCost).build();
+        order.changeShipping(secondShipping);
+
+        Money expectedTotalAmount = itemsTotalAmount.add(secondShippingCost);
+
+        assertThat(order.getShipping()).isEqualTo(secondShipping);
+        assertThat(order.getTotalAmount()).isEqualTo(expectedTotalAmount);
     }
 
     @Test
     void givenExpectedDeliveryDateInPast_whenChangeShipping_thenThrowsOrderInvalidShippingDeliveryDateException() {
         CustomerId customerId = new CustomerId();
         Order order = Order.draft(customerId);
-        ShippingInfo shippingInfo = aShippingInfo();
-        Money shippingCost = new Money("9.99");
-        LocalDate pastDate = LocalDate.now().minusDays(1);
+        Shipping shipping = aShipping().withExpectedDate(LocalDate.now().minusDays(1)).build();
 
-        assertThatThrownBy(() -> order.changeShipping(shippingInfo, shippingCost, pastDate))
+        assertThatThrownBy(() -> order.changeShipping(shipping))
                 .isInstanceOf(OrderInvalidShippingDeliveryDateException.class);
     }
 
     @Test
-    void givenNullShippingInfo_whenChangeShipping_thenThrowsNullPointerException() {
+    void givenNullShipping_whenChangeShipping_thenThrowsNullPointerException() {
         CustomerId customerId = new CustomerId();
         Order order = Order.draft(customerId);
 
-        assertThatThrownBy(() -> order.changeShipping(null, new Money("5.00"), LocalDate.now().plusDays(3)))
-                .isInstanceOf(NullPointerException.class);
-    }
-
-    @Test
-    void givenNullShippingCost_whenChangeShipping_thenThrowsNullPointerException() {
-        CustomerId customerId = new CustomerId();
-        Order order = Order.draft(customerId);
-        ShippingInfo shippingInfo = aShippingInfo();
-
-        assertThatThrownBy(() -> order.changeShipping(shippingInfo, null, LocalDate.now().plusDays(3)))
-                .isInstanceOf(NullPointerException.class);
-    }
-
-    @Test
-    void givenNullExpectedDeliveryDate_whenChangeShipping_thenThrowsNullPointerException() {
-        CustomerId customerId = new CustomerId();
-        Order order = Order.draft(customerId);
-        ShippingInfo shippingInfo = aShippingInfo();
-
-        assertThatThrownBy(() -> order.changeShipping(shippingInfo, new Money("5.00"), null))
+        assertThatThrownBy(() -> order.changeShipping(null))
                 .isInstanceOf(NullPointerException.class);
     }
 

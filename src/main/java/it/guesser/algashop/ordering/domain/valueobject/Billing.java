@@ -2,17 +2,19 @@ package it.guesser.algashop.ordering.domain.valueobject;
 
 import static java.util.Objects.requireNonNull;
 
-public record BillingInfo(
+public record Billing(
         FullName fullName,
         Document document,
         Phone phone,
-        Address address) {
+        Address address,
+        Email email) {
 
-    public BillingInfo {
+    public Billing {
         requireNonNull(fullName);
         requireNonNull(document);
         requireNonNull(phone);
         requireNonNull(address);
+        requireNonNull(email);
     }
 
 }

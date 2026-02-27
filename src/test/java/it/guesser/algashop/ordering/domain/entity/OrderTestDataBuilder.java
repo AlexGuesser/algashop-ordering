@@ -1,19 +1,19 @@
 package it.guesser.algashop.ordering.domain.entity;
 
+import static it.guesser.algashop.ordering.domain.valueobject.ShippingTestDataBuilder.aShipping;
 import static java.util.Objects.requireNonNull;
 
-import java.time.LocalDate;
-
 import it.guesser.algashop.ordering.domain.valueobject.Address;
-import it.guesser.algashop.ordering.domain.valueobject.BillingInfo;
+import it.guesser.algashop.ordering.domain.valueobject.Billing;
 import it.guesser.algashop.ordering.domain.valueobject.Document;
+import it.guesser.algashop.ordering.domain.valueobject.Email;
 import it.guesser.algashop.ordering.domain.valueobject.FullName;
 import it.guesser.algashop.ordering.domain.valueobject.Money;
 import it.guesser.algashop.ordering.domain.valueobject.Phone;
 import it.guesser.algashop.ordering.domain.valueobject.Product;
 import it.guesser.algashop.ordering.domain.valueobject.ProductName;
 import it.guesser.algashop.ordering.domain.valueobject.Quantity;
-import it.guesser.algashop.ordering.domain.valueobject.ShippingInfo;
+import it.guesser.algashop.ordering.domain.valueobject.Shipping;
 import it.guesser.algashop.ordering.domain.valueobject.ZipCode;
 import it.guesser.algashop.ordering.domain.valueobject.id.CustomerId;
 import it.guesser.algashop.ordering.domain.valueobject.id.ProductId;
@@ -22,10 +22,8 @@ public class OrderTestDataBuilder {
 
     private CustomerId customerId = new CustomerId();
     private PaymentMethod paymentMethod = PaymentMethod.GATEWAY_BALANCE;
-    private Money shippingCost = Money.ZERO;
-    private LocalDate expectedDeliveryDate = LocalDate.now().plusWeeks(1);
-    private ShippingInfo shippingInfo = aShippingInfo();
-    private BillingInfo billingInfo = aBillingInfo();
+    private Shipping shipping = aShipping().build();
+    private Billing billingInfo = aBilling();
     private boolean withItems = true;
     private OrderStatus status;
 
@@ -47,22 +45,12 @@ public class OrderTestDataBuilder {
         return this;
     }
 
-    public OrderTestDataBuilder withShippingCost(Money shippingCost) {
-        this.shippingCost = requireNonNull(shippingCost);
+    public OrderTestDataBuilder withShipping(Shipping shipping) {
+        this.shipping = requireNonNull(shipping);
         return this;
     }
 
-    public OrderTestDataBuilder withExpectedDeliveryDate(LocalDate expectedDeliveryDate) {
-        this.expectedDeliveryDate = requireNonNull(expectedDeliveryDate);
-        return this;
-    }
-
-    public OrderTestDataBuilder withShippingInfo(ShippingInfo shippingInfo) {
-        this.shippingInfo = requireNonNull(shippingInfo);
-        return this;
-    }
-
-    public OrderTestDataBuilder withBillingInfo(BillingInfo billingInfo) {
+    public OrderTestDataBuilder withBillingInfo(Billing billingInfo) {
         this.billingInfo = requireNonNull(billingInfo);
         return this;
     }
@@ -79,7 +67,7 @@ public class OrderTestDataBuilder {
 
     public Order build() {
         Order order = Order.draft(customerId);
-        order.changeShipping(shippingInfo, shippingCost, expectedDeliveryDate);
+        order.changeShipping(shipping);
         order.changeBilling(billingInfo);
         order.changePaymentMethod(paymentMethod);
 
@@ -116,41 +104,31 @@ public class OrderTestDataBuilder {
         return order;
     }
 
-    public static BillingInfo aBillingInfo() {
-        return billingInfo(
+    public static Billing aBilling() {
+        return billing(
                 "John Doe",
                 "12345678901",
                 "555-1234",
-                "Main St", "Apt 1", "Downtown", "City", "ST", "12345");
+                anAddress(),
+                anEmail());
     }
 
-    public static ShippingInfo aShippingInfo() {
-        return shippingInfo(
-                "John Doe",
-                "12345678901",
-                "555-1234",
-                "Main St", "Apt 1", "Downtown", "City", "ST", "12345");
+    private static Address anAddress() {
+        return new Address("Main St", "Apt 1", "Downtown", "City", "ST", new ZipCode("12345"));
     }
 
-    public static Address anAddress() {
-        return null;
+    public static Email anEmail() {
+        return new Email("email@gmail.com");
     }
 
-    public static BillingInfo billingInfo(String fullName, String document, String phone,
-            String street, String complement, String neighborhood, String city, String state, String zip) {
-        return new BillingInfo(
+    public static Billing billing(String fullName, String document, String phone,
+            Address address, Email email) {
+        return new Billing(
                 new FullName(fullName),
                 new Document(document),
                 new Phone(phone),
-                new Address(street, complement, neighborhood, city, state, new ZipCode(zip)));
+                address,
+                email);
     }
 
-    public static ShippingInfo shippingInfo(String fullName, String document, String phone,
-            String street, String complement, String neighborhood, String city, String state, String zip) {
-        return new ShippingInfo(
-                new FullName(fullName),
-                new Document(document),
-                new Phone(phone),
-                new Address(street, complement, neighborhood, city, state, new ZipCode(zip)));
-    }
 }

@@ -3,9 +3,11 @@ package it.guesser.algashop.ordering.domain.valueobject;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
+import java.time.LocalDate;
+
 import org.junit.jupiter.api.Test;
 
-public class ShippingInfoTest {
+public class ShippingTest {
 
     private FullName fullName() {
         return new FullName("Jane Smith");
@@ -17,6 +19,18 @@ public class ShippingInfoTest {
 
     private Phone phone() {
         return new Phone("555-5678");
+    }
+
+    private Recipient recipient() {
+        return new Recipient(fullName(), document(), phone());
+    }
+
+    private Money cost() {
+        return Money.ZERO;
+    }
+
+    private LocalDate expectedDate() {
+        return LocalDate.now().plusWeeks(1);
     }
 
     private Address address() {
@@ -31,42 +45,42 @@ public class ShippingInfoTest {
 
     @Test
     void givenValidData_whenConstructingShippingInfo_thenFieldsAreSet() {
-        ShippingInfo shippingInfo = new ShippingInfo(fullName(), document(), phone(), address());
+        Shipping shippingInfo = new Shipping(cost(), expectedDate(), recipient(), address());
 
-        assertThat(shippingInfo.fullName()).isEqualTo(fullName());
-        assertThat(shippingInfo.document()).isEqualTo(document());
-        assertThat(shippingInfo.phone()).isEqualTo(phone());
+        assertThat(shippingInfo.cost()).isEqualTo(cost());
+        assertThat(shippingInfo.expectedDate()).isEqualTo(expectedDate());
+        assertThat(shippingInfo.recipient()).isEqualTo(recipient());
         assertThat(shippingInfo.address()).isEqualTo(address());
     }
 
     @Test
-    void givenNullFullName_whenConstructingShippingInfo_thenThrowsNullPointerException() {
-        assertThatThrownBy(() -> new ShippingInfo(null, document(), phone(), address()))
+    void givenNullCost_whenConstructingShippingInfo_thenThrowsNullPointerException() {
+        assertThatThrownBy(() -> new Shipping(null, expectedDate(), recipient(), address()))
                 .isInstanceOf(NullPointerException.class);
     }
 
     @Test
-    void givenNullDocument_whenConstructingShippingInfo_thenThrowsNullPointerException() {
-        assertThatThrownBy(() -> new ShippingInfo(fullName(), null, phone(), address()))
+    void givenNullExpectedDate_whenConstructingShippingInfo_thenThrowsNullPointerException() {
+        assertThatThrownBy(() -> new Shipping(cost(), null, recipient(), address()))
                 .isInstanceOf(NullPointerException.class);
     }
 
     @Test
-    void givenNullPhone_whenConstructingShippingInfo_thenThrowsNullPointerException() {
-        assertThatThrownBy(() -> new ShippingInfo(fullName(), document(), null, address()))
+    void givenNullRecipient_whenConstructingShippingInfo_thenThrowsNullPointerException() {
+        assertThatThrownBy(() -> new Shipping(cost(), expectedDate(), null, address()))
                 .isInstanceOf(NullPointerException.class);
     }
 
     @Test
     void givenNullAddress_whenConstructingShippingInfo_thenThrowsNullPointerException() {
-        assertThatThrownBy(() -> new ShippingInfo(fullName(), document(), phone(), null))
+        assertThatThrownBy(() -> new Shipping(cost(), expectedDate(), recipient(), null))
                 .isInstanceOf(NullPointerException.class);
     }
 
     @Test
     void givenSameValues_whenComparingShippingInfos_thenAreEqual() {
-        ShippingInfo first = new ShippingInfo(fullName(), document(), phone(), address());
-        ShippingInfo second = new ShippingInfo(fullName(), document(), phone(), address());
+        Shipping first = new Shipping(cost(), expectedDate(), recipient(), address());
+        Shipping second = new Shipping(cost(), expectedDate(), recipient(), address());
 
         assertThat(first).isEqualTo(second);
         assertThat(first.hashCode()).isEqualTo(second.hashCode());

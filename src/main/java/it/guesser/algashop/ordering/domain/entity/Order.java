@@ -1,12 +1,12 @@
 package it.guesser.algashop.ordering.domain.entity;
 
+import static it.guesser.algashop.ordering.domain.validator.FieldsValidation.requireNonNullDependency;
 import static java.util.Objects.requireNonNull;
 
 import java.math.BigDecimal;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.util.HashSet;
-import java.util.Optional;
 import java.util.Set;
 
 import org.apache.commons.collections.CollectionUtils;
@@ -15,18 +15,14 @@ import it.guesser.algashop.ordering.domain.exceptions.OrderCannotBePlacedExcepti
 import it.guesser.algashop.ordering.domain.exceptions.OrderInvalidShippingDeliveryDateException;
 import it.guesser.algashop.ordering.domain.exceptions.OrderItemIdNotFoundInOrderException;
 import it.guesser.algashop.ordering.domain.exceptions.OrderStatusCannotBeChangedException;
-import it.guesser.algashop.ordering.domain.valueobject.BillingInfo;
+import it.guesser.algashop.ordering.domain.valueobject.Billing;
 import it.guesser.algashop.ordering.domain.valueobject.Money;
 import it.guesser.algashop.ordering.domain.valueobject.Product;
-import it.guesser.algashop.ordering.domain.valueobject.ProductName;
 import it.guesser.algashop.ordering.domain.valueobject.Quantity;
-import it.guesser.algashop.ordering.domain.valueobject.ShippingInfo;
+import it.guesser.algashop.ordering.domain.valueobject.Shipping;
 import it.guesser.algashop.ordering.domain.valueobject.id.CustomerId;
 import it.guesser.algashop.ordering.domain.valueobject.id.OrderId;
 import it.guesser.algashop.ordering.domain.valueobject.id.OrderItemId;
-import it.guesser.algashop.ordering.domain.valueobject.id.ProductId;
-
-import static it.guesser.algashop.ordering.domain.validator.FieldsValidation.requireNonNullDependency;
 
 public class Order {
 
@@ -41,20 +37,17 @@ public class Order {
     private long canceledAt;
     private long readyAt;
 
-    private BillingInfo billingInfo;
-    private ShippingInfo shippingInfo;
+    private Billing billing;
+    private Shipping shipping;
 
     private OrderStatus status;
     private PaymentMethod paymentMethod;
 
-    private Money shippingCost = Money.ZERO;
-    private LocalDate expectedDeliveryDate;
-
     private Set<OrderItem> items = new HashSet<>();
 
     private Order(OrderId id, CustomerId customerId, Money totalAmount, Quantity totalItems, long placedAt, long paidAt,
-            long canceledAt, long readyAt, BillingInfo billingInfo, ShippingInfo shippingInfo, OrderStatus status,
-            PaymentMethod paymentMethod, Money shippingCost, LocalDate expectedDeliveryDate, Set<OrderItem> items) {
+            long canceledAt, long readyAt, Billing billingInfo, Shipping shipping, OrderStatus status,
+            PaymentMethod paymentMethod, Set<OrderItem> items) {
         this.id = requireNonNull(id);
         this.customerId = requireNonNull(customerId);
         this.totalAmount = requireNonNull(totalAmount);
@@ -63,12 +56,10 @@ public class Order {
         this.paidAt = paidAt;
         this.canceledAt = canceledAt;
         this.readyAt = readyAt;
-        this.billingInfo = billingInfo;
-        this.shippingInfo = shippingInfo;
+        this.billing = billingInfo;
+        this.shipping = shipping;
         this.status = requireNonNull(status);
         this.paymentMethod = paymentMethod;
-        this.shippingCost = requireNonNull(shippingCost);
-        this.expectedDeliveryDate = expectedDeliveryDate;
         this.items = requireNonNull(items);
     }
 
@@ -85,8 +76,6 @@ public class Order {
                 null,
                 null,
                 OrderStatus.DRAFT,
-                null,
-                Money.ZERO,
                 null,
                 new HashSet<>());
 
@@ -124,12 +113,16 @@ public class Order {
         return readyAt;
     }
 
-    public BillingInfo getBillingInfo() {
-        return billingInfo;
+    public Billing getBilling() {
+        return billing;
     }
 
-    public ShippingInfo getShippingInfo() {
-        return shippingInfo;
+    public Shipping getShipping() {
+        return shipping;
+    }
+
+    private Money getShippingCost() {
+        return getShipping() == null ? Money.ZERO : getShipping().cost();
     }
 
     public OrderStatus getStatus() {
@@ -138,14 +131,6 @@ public class Order {
 
     public PaymentMethod getPaymentMethod() {
         return paymentMethod;
-    }
-
-    public Money getShippingCost() {
-        return shippingCost;
-    }
-
-    public LocalDate getExpectedDeliveryDate() {
-        return expectedDeliveryDate;
     }
 
     public Set<OrderItem> getItems() {
@@ -176,12 +161,12 @@ public class Order {
         this.readyAt = readyAt;
     }
 
-    private void setBillingInfo(BillingInfo billingInfo) {
-        this.billingInfo = requireNonNull(billingInfo);
+    private void setBilling(Billing billingInfo) {
+        this.billing = requireNonNull(billingInfo);
     }
 
-    private void setShippingInfo(ShippingInfo shippingInfo) {
-        this.shippingInfo = requireNonNull(shippingInfo);
+    private void setShipping(Shipping shipping) {
+        this.shipping = requireNonNull(shipping);
     }
 
     private void setStatus(OrderStatus status) {
@@ -190,14 +175,6 @@ public class Order {
 
     private void setPaymentMethod(PaymentMethod paymentMethod) {
         this.paymentMethod = requireNonNull(paymentMethod);
-    }
-
-    private void setShippingCost(Money shippingCost) {
-        this.shippingCost = requireNonNull(shippingCost);
-    }
-
-    private void setExpectedDeliveryDate(LocalDate expectedDeliveryDate) {
-        this.expectedDeliveryDate = requireNonNull(expectedDeliveryDate);
     }
 
     public boolean isDraft() {
@@ -221,14 +198,10 @@ public class Order {
     }
 
     private void validateIfCanBePlaced() {
-        requireNonNullDependency(getShippingInfo(),
-                OrderCannotBePlacedException.noRequiredDependency(getId(), "shippingInfo"));
-        requireNonNullDependency(getBillingInfo(),
+        requireNonNullDependency(getShipping(),
+                OrderCannotBePlacedException.noRequiredDependency(getId(), "shipping"));
+        requireNonNullDependency(getBilling(),
                 OrderCannotBePlacedException.noRequiredDependency(getId(), "billingInfo"));
-        requireNonNullDependency(getExpectedDeliveryDate(),
-                OrderCannotBePlacedException.noRequiredDependency(getId(), "expectedDeliveryDate"));
-        requireNonNullDependency(getShippingCost(),
-                OrderCannotBePlacedException.noRequiredDependency(getId(), "shippingCost"));
         requireNonNullDependency(getPaymentMethod(),
                 OrderCannotBePlacedException.noRequiredDependency(getId(), "paymentMethod"));
 
@@ -276,23 +249,20 @@ public class Order {
         setPaymentMethod(newPaymentMethod);
     }
 
-    public void changeBilling(BillingInfo billingInfo) {
+    public void changeBilling(Billing billingInfo) {
         requireNonNull(billingInfo);
-        setBillingInfo(billingInfo);
+        setBilling(billingInfo);
     }
 
-    public void changeShipping(ShippingInfo shippingInfo, Money shippingCost, LocalDate expectedDeliveryDate) {
-        requireNonNull(shippingInfo);
-        requireNonNull(shippingCost);
-        requireNonNull(expectedDeliveryDate);
+    public void changeShipping(Shipping shipping) {
+        requireNonNull(shipping);
 
-        if (expectedDeliveryDate.isBefore(LocalDate.now())) {
+        if (shipping.expectedDate().isBefore(LocalDate.now())) {
             throw new OrderInvalidShippingDeliveryDateException(getId());
         }
 
-        setShippingInfo(shippingInfo);
-        setShippingCost(shippingCost);
-        setExpectedDeliveryDate(expectedDeliveryDate);
+        setShipping(shipping);
+        recalculateTotals();
     }
 
     void changeItemQuantity(OrderItemId orderItemId, Quantity newQuantity) {

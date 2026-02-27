@@ -29,9 +29,13 @@ public class BillingInfoTest {
                 new ZipCode("12345"));
     }
 
+    private Email email() {
+        return new Email("email@gmail.com");
+    }
+
     @Test
     void givenValidData_whenConstructingBillingInfo_thenFieldsAreSet() {
-        BillingInfo billingInfo = new BillingInfo(fullName(), document(), phone(), address());
+        Billing billingInfo = new Billing(fullName(), document(), phone(), address(), email());
 
         assertThat(billingInfo.fullName()).isEqualTo(fullName());
         assertThat(billingInfo.document()).isEqualTo(document());
@@ -41,32 +45,38 @@ public class BillingInfoTest {
 
     @Test
     void givenNullFullName_whenConstructingBillingInfo_thenThrowsNullPointerException() {
-        assertThatThrownBy(() -> new BillingInfo(null, document(), phone(), address()))
+        assertThatThrownBy(() -> new Billing(null, document(), phone(), address(), email()))
                 .isInstanceOf(NullPointerException.class);
     }
 
     @Test
     void givenNullDocument_whenConstructingBillingInfo_thenThrowsNullPointerException() {
-        assertThatThrownBy(() -> new BillingInfo(fullName(), null, phone(), address()))
+        assertThatThrownBy(() -> new Billing(fullName(), null, phone(), address(), email()))
                 .isInstanceOf(NullPointerException.class);
     }
 
     @Test
     void givenNullPhone_whenConstructingBillingInfo_thenThrowsNullPointerException() {
-        assertThatThrownBy(() -> new BillingInfo(fullName(), document(), null, address()))
+        assertThatThrownBy(() -> new Billing(fullName(), document(), null, address(), email()))
                 .isInstanceOf(NullPointerException.class);
     }
 
     @Test
     void givenNullAddress_whenConstructingBillingInfo_thenThrowsNullPointerException() {
-        assertThatThrownBy(() -> new BillingInfo(fullName(), document(), phone(), null))
+        assertThatThrownBy(() -> new Billing(fullName(), document(), phone(), null, email()))
+                .isInstanceOf(NullPointerException.class);
+    }
+
+    @Test
+    void givenNullEmail_whenConstructingBillingInfo_thenThrowsNullPointerException() {
+        assertThatThrownBy(() -> new Billing(fullName(), document(), phone(), address(), null))
                 .isInstanceOf(NullPointerException.class);
     }
 
     @Test
     void givenSameValues_whenComparingBillingInfos_thenAreEqual() {
-        BillingInfo first = new BillingInfo(fullName(), document(), phone(), address());
-        BillingInfo second = new BillingInfo(fullName(), document(), phone(), address());
+        Billing first = new Billing(fullName(), document(), phone(), address(), email());
+        Billing second = new Billing(fullName(), document(), phone(), address(), email());
 
         assertThat(first).isEqualTo(second);
         assertThat(first.hashCode()).isEqualTo(second.hashCode());
