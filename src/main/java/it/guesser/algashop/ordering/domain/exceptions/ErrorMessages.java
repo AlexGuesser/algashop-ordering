@@ -12,5 +12,7 @@ public class ErrorMessages {
     public static final String ORDER_CANNOT_BE_PLACED_NO_REQUIRED_DEPENDENCY = "Order: %s cannot be placed because has no required dependency: %s";
     public static final String ORDER_ITEM_NOT_FOUND_IN_ORDER = "OrderItem: %s not found inside order: %s";
     public static final String PRODUCT_OUT_OF_STOCK = "Product: %s is out of stock";
+    public static final String ERROR_ORDER_CANNOT_BE_EDITED = "Order %s with status %s cannot be edited";
+    public static final String SHOPPING_CART_ITEM_NOT_FOUND = "ShoppinCartItem: %s not found in ShoppingCart: %s";
 
 }

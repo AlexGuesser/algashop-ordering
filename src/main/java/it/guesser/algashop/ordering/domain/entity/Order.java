@@ -11,6 +11,7 @@ import java.util.Set;
 
 import org.apache.commons.collections.CollectionUtils;
 
+import it.guesser.algashop.ordering.domain.exceptions.OrderCannotBeEditedException;
 import it.guesser.algashop.ordering.domain.exceptions.OrderCannotBePlacedException;
 import it.guesser.algashop.ordering.domain.exceptions.OrderInvalidShippingDeliveryDateException;
 import it.guesser.algashop.ordering.domain.exceptions.OrderItemIdNotFoundInOrderException;
@@ -215,6 +216,16 @@ public class Order {
         setPaidAt(Instant.now().toEpochMilli());
     }
 
+    public void markAsReady() {
+        changeStatus(OrderStatus.READY);
+        setReadyAt(Instant.now().toEpochMilli());
+    }
+
+    public void markAsCanceled() {
+        changeStatus(OrderStatus.CANCELED);
+        setCanceledAt(Instant.now().toEpochMilli());
+    }
+
     private void changeStatus(OrderStatus newStatus) {
         requireNonNull(newStatus);
 
@@ -227,10 +238,20 @@ public class Order {
     public void addItem(Product product, Quantity quantity) {
         requireNonNull(product);
         requireNonNull(quantity);
+        verifyIfChangeable();
         product.checkOutOfStock();
 
         OrderItem newOrderItem = OrderItem.brandNew(getId(), product, quantity);
         this.items.add(newOrderItem);
+        recalculateTotals();
+    }
+
+    public void removeItem(OrderItemId orderItemId) {
+        requireNonNull(orderItemId);
+        verifyIfChangeable();
+
+        OrderItem orderItem = findOrderItemBy(orderItemId);
+        this.items.remove(orderItem);
         recalculateTotals();
     }
 
@@ -246,16 +267,21 @@ public class Order {
 
     public void changePaymentMethod(PaymentMethod newPaymentMethod) {
         requireNonNull(newPaymentMethod);
+        verifyIfChangeable();
+
         setPaymentMethod(newPaymentMethod);
     }
 
     public void changeBilling(Billing billingInfo) {
         requireNonNull(billingInfo);
+        verifyIfChangeable();
+
         setBilling(billingInfo);
     }
 
     public void changeShipping(Shipping shipping) {
         requireNonNull(shipping);
+        verifyIfChangeable();
 
         if (shipping.expectedDate().isBefore(LocalDate.now())) {
             throw new OrderInvalidShippingDeliveryDateException(getId());
@@ -268,6 +294,7 @@ public class Order {
     void changeItemQuantity(OrderItemId orderItemId, Quantity newQuantity) {
         requireNonNull(orderItemId);
         requireNonNull(newQuantity);
+        verifyIfChangeable();
 
         OrderItem orderItem = findOrderItemBy(orderItemId);
         orderItem.changeQuantity(newQuantity);
@@ -282,6 +309,12 @@ public class Order {
                 .filter(oi -> oi.getId().equals(orderItemId))
                 .findFirst()
                 .orElseThrow(() -> new OrderItemIdNotFoundInOrderException(orderItemId, getId()));
+    }
+
+    private void verifyIfChangeable() {
+        if (!isDraft()) {
+            throw new OrderCannotBeEditedException(getId(), getStatus());
+        }
     }
 
     @Override

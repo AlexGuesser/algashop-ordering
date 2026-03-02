@@ -9,6 +9,7 @@ import java.util.Set;
 import org.junit.jupiter.api.Test;
 
 import it.guesser.algashop.ordering.domain.exceptions.OrderCannotBePlacedException;
+import it.guesser.algashop.ordering.domain.exceptions.OrderCannotBeEditedException;
 import it.guesser.algashop.ordering.domain.exceptions.OrderInvalidShippingDeliveryDateException;
 import it.guesser.algashop.ordering.domain.exceptions.OrderStatusCannotBeChangedException;
 import it.guesser.algashop.ordering.domain.exceptions.ProductOutOfStockException;
@@ -19,6 +20,7 @@ import it.guesser.algashop.ordering.domain.valueobject.ProductName;
 import it.guesser.algashop.ordering.domain.valueobject.Quantity;
 import it.guesser.algashop.ordering.domain.valueobject.Shipping;
 import it.guesser.algashop.ordering.domain.valueobject.id.CustomerId;
+import it.guesser.algashop.ordering.domain.valueobject.id.OrderItemId;
 import it.guesser.algashop.ordering.domain.valueobject.id.ProductId;
 import static it.guesser.algashop.ordering.domain.entity.OrderTestDataBuilder.*;
 import static it.guesser.algashop.ordering.domain.valueobject.ProductDataTestBuilder.aProductInStock;
@@ -389,7 +391,7 @@ public class OrderTest {
     }
 
     @Test
-    void givenValidPlacesOrder_whenMarkAsPaid_thenStatusChangeAndPaidAtIsSet() {
+    void givenValidPlacedOrder_whenMarkAsPaid_thenStatusChangesToPaidAndPaidAtIsSet() {
         Order order = anOrder().withStatus(OrderStatus.PLACED).build();
         assertThat(order.getStatus()).isEqualTo(OrderStatus.PLACED);
         assertThat(order.getPaidAt()).isZero();
@@ -399,6 +401,67 @@ public class OrderTest {
         assertThat(order.getStatus()).isEqualTo(OrderStatus.PAID);
         assertThat(order.getPaidAt()).isNotZero();
     }
+
+    // --- markAsReady ---
+
+    @Test
+    void givenPaidOrder_whenMarkAsReady_thenStatusChangesToReadyAndReadyAtIsSet() {
+        Order order = anOrder().withStatus(OrderStatus.PAID).build();
+        assertThat(order.getStatus()).isEqualTo(OrderStatus.PAID);
+        assertThat(order.getReadyAt()).isZero();
+
+        order.markAsReady();
+
+        assertThat(order.getStatus()).isEqualTo(OrderStatus.READY);
+        assertThat(order.getReadyAt()).isNotZero();
+    }
+
+    @Test
+    void givenDraftOrder_whenMarkAsReady_thenThrowsOrderStatusCannotBeChangedException() {
+        Order order = anOrder().withStatus(OrderStatus.DRAFT).build();
+
+        assertThatThrownBy(order::markAsReady)
+                .isInstanceOf(OrderStatusCannotBeChangedException.class)
+                .hasMessageContaining("Cannot change order")
+                .hasMessageContaining("from DRAFT to READY");
+    }
+
+    @Test
+    void givenPlacedOrder_whenMarkAsReady_thenThrowsOrderStatusCannotBeChangedException() {
+        Order order = anOrder().withStatus(OrderStatus.PLACED).build();
+
+        assertThatThrownBy(order::markAsReady)
+                .isInstanceOf(OrderStatusCannotBeChangedException.class)
+                .hasMessageContaining("Cannot change order")
+                .hasMessageContaining("from PLACED to READY");
+    }
+
+    // --- markAsCanceled ---
+
+    @Test
+    void givenPlacedOrder_whenMarkAsCanceled_thenStatusChangesToCanceledAndCanceledAtIsSet() {
+        Order order = anOrder().withStatus(OrderStatus.PLACED).build();
+        assertThat(order.getStatus()).isEqualTo(OrderStatus.PLACED);
+        assertThat(order.getCanceledAt()).isZero();
+
+        order.markAsCanceled();
+
+        assertThat(order.getStatus()).isEqualTo(OrderStatus.CANCELED);
+        assertThat(order.getCanceledAt()).isNotZero();
+    }
+
+    @Test
+    void givenPaidOrder_whenMarkAsCanceled_thenStatusChangesToCanceledAndCanceledAtIsSet() {
+        Order order = anOrder().withStatus(OrderStatus.PAID).build();
+        assertThat(order.getStatus()).isEqualTo(OrderStatus.PAID);
+        assertThat(order.getCanceledAt()).isZero();
+
+        order.markAsCanceled();
+
+        assertThat(order.getStatus()).isEqualTo(OrderStatus.CANCELED);
+        assertThat(order.getCanceledAt()).isNotZero();
+    }
+
 
     @Test
     void givenValidDraftOrder_whenChangeQuantity_thenQuantityIsChangedAndTotalsAreRecalculated() {
@@ -422,5 +485,84 @@ public class OrderTest {
         assertThat(order.getTotalAmount()).isEqualTo(new Money("20.00"));
         assertThat(orderItem.getQuantity()).isEqualTo(new Quantity(2));
         assertThat(orderItem.getTotalAmount()).isEqualTo(new Money("20.00"));
+    }
+
+    // --- removeItem ---
+
+    @Test
+    void givenDraftOrderWithItems_whenRemoveExistingItem_thenItemIsRemovedAndTotalsAreRecalculated() {
+        Order order = anOrder().withStatus(OrderStatus.DRAFT).build();
+        assertThat(order.getItems()).isNotEmpty();
+        Money totalAmountBefore = order.getTotalAmount();
+        Quantity totalItemsBefore = order.getTotalItems();
+
+        OrderItem itemToRemove = order.getItems().stream().findFirst().orElseThrow();
+
+        order.removeItem(itemToRemove.getId());
+
+        assertThat(order.getItems()).doesNotContain(itemToRemove);
+        assertThat(order.getTotalItems().value()).isLessThan(totalItemsBefore.value());
+        assertThat(order.getTotalAmount().value()).isLessThan(totalAmountBefore.value());
+    }
+
+    @Test
+    void givenDraftOrder_whenRemoveItemWithUnknownId_thenThrowsOrderItemIdNotFoundInOrderException() {
+        Order order = anOrder().withStatus(OrderStatus.DRAFT).build();
+
+        OrderItemId unknownId = new OrderItemId();
+        assertThatThrownBy(() -> order.removeItem(unknownId))
+                .isInstanceOf(it.guesser.algashop.ordering.domain.exceptions.OrderItemIdNotFoundInOrderException.class);
+    }
+
+    // --- verifyIfChangeable ---
+
+    @Test
+    void givenNonDraftOrder_whenAddItem_thenThrowsOrderCannotBeEditedException() {
+        Order order = anOrder().withStatus(OrderStatus.PLACED).build();
+
+        assertThatThrownBy(() -> order.addItem(aProductInStock(), new Quantity(1)))
+                .isInstanceOf(OrderCannotBeEditedException.class)
+                .hasMessageContaining("cannot be edited");
+    }
+
+    @Test
+    void givenNonDraftOrder_whenChangePaymentMethod_thenThrowsOrderCannotBeEditedException() {
+        Order order = anOrder().withStatus(OrderStatus.PLACED).build();
+
+        assertThatThrownBy(() -> order.changePaymentMethod(PaymentMethod.CREDIT_CARD))
+                .isInstanceOf(OrderCannotBeEditedException.class)
+                .hasMessageContaining("cannot be edited");
+    }
+
+    @Test
+    void givenNonDraftOrder_whenChangeBilling_thenThrowsOrderCannotBeEditedException() {
+        Order order = anOrder().withStatus(OrderStatus.PLACED).build();
+
+        Billing newBilling = aBilling();
+
+        assertThatThrownBy(() -> order.changeBilling(newBilling))
+                .isInstanceOf(OrderCannotBeEditedException.class)
+                .hasMessageContaining("cannot be edited");
+    }
+
+    @Test
+    void givenNonDraftOrder_whenChangeShipping_thenThrowsOrderCannotBeEditedException() {
+        Order order = anOrder().withStatus(OrderStatus.PLACED).build();
+
+        Shipping newShipping = aShipping().build();
+
+        assertThatThrownBy(() -> order.changeShipping(newShipping))
+                .isInstanceOf(OrderCannotBeEditedException.class)
+                .hasMessageContaining("cannot be edited");
+    }
+
+    @Test
+    void givenNonDraftOrder_whenChangeItemQuantity_thenThrowsOrderCannotBeEditedException() {
+        Order order = anOrder().withStatus(OrderStatus.PLACED).build();
+        OrderItem existingItem = order.getItems().stream().findFirst().orElseThrow();
+
+        assertThatThrownBy(() -> order.changeItemQuantity(existingItem.getId(), new Quantity(3)))
+                .isInstanceOf(OrderCannotBeEditedException.class)
+                .hasMessageContaining("cannot be edited");
     }
 }
