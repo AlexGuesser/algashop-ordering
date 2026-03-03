@@ -16,14 +16,14 @@ import it.guesser.algashop.ordering.domain.valueobject.LoyaltyPoints;
 import it.guesser.algashop.ordering.domain.valueobject.Phone;
 import it.guesser.algashop.ordering.domain.valueobject.id.CustomerId;
 
-public class Customer {
+public class Customer implements AggregateRoot<CustomerId> {
 
     private static final FullName ANONYMOUS_FULL_NAME = new FullName("Anonymous");
     private static final Phone ANONYMOUS_PHONE = new Phone("000-000-0000");
     private static final Document ANONYMOUS_DOCUMENT = new Document("000-00-0000");
     private static final String ANONYMOUS_EMAIL_SUFFIX = "@anonymous.com";
 
-    private CustomerId customerId;
+    private CustomerId id;
     private FullName fullName;
     private BirthDate birthDate;
     private Email email;
@@ -88,7 +88,7 @@ public class Customer {
             long archivedAt,
             LoyaltyPoints loyaltyPoints,
             Address address) {
-        setCustomerId(customerId);
+        setId(customerId);
         setFullName(fullName);
         setBirthDate(birthDate);
         setEmail(email);
@@ -102,8 +102,8 @@ public class Customer {
         setAddress(address);
     }
 
-    private void setCustomerId(CustomerId customerId) {
-        this.customerId = requireNonNull(customerId);
+    private void setId(CustomerId customerId) {
+        this.id = requireNonNull(customerId);
     }
 
     private void setFullName(FullName fullName) {
@@ -159,8 +159,8 @@ public class Customer {
         }
     }
 
-    public CustomerId getCustomerId() {
-        return customerId;
+    public CustomerId getId() {
+        return id;
     }
 
     public FullName getFullName() {
@@ -260,7 +260,7 @@ public class Customer {
     public int hashCode() {
         final int prime = 31;
         int result = 1;
-        result = prime * result + ((customerId == null) ? 0 : customerId.hashCode());
+        result = prime * result + ((id == null) ? 0 : id.hashCode());
         return result;
     }
 
@@ -273,10 +273,10 @@ public class Customer {
         if (getClass() != obj.getClass())
             return false;
         Customer other = (Customer) obj;
-        if (customerId == null) {
-            if (other.customerId != null)
+        if (id == null) {
+            if (other.id != null)
                 return false;
-        } else if (!customerId.equals(other.customerId))
+        } else if (!id.equals(other.id))
             return false;
         return true;
     }

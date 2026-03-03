@@ -33,7 +33,7 @@ public class CustomerTest {
 
                 Customer customer = Customer.brandNew(fullName, birthDate, email, phone, document, address);
 
-                assertThat(customer.getCustomerId()).isNotNull();
+                assertThat(customer.getId()).isNotNull();
                 assertThat(customer.getRegisteredAt()).isGreaterThan(0L);
 
                 assertThat(customer.getFullName()).isEqualTo(fullName);

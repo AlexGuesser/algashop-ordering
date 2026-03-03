@@ -25,7 +25,7 @@ import it.guesser.algashop.ordering.domain.valueobject.id.CustomerId;
 import it.guesser.algashop.ordering.domain.valueobject.id.OrderId;
 import it.guesser.algashop.ordering.domain.valueobject.id.OrderItemId;
 
-public class Order {
+public class Order implements AggregateRoot<OrderId>{
 
     private OrderId id;
     private CustomerId customerId;
