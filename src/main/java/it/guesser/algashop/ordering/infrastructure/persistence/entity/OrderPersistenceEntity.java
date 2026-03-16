@@ -3,7 +3,6 @@ package it.guesser.algashop.ordering.infrastructure.persistence.entity;
 import java.math.BigDecimal;
 import java.util.UUID;
 
-import org.apache.commons.lang3.builder.EqualsExclude;
 
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;

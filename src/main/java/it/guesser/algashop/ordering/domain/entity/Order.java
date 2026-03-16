@@ -25,7 +25,7 @@ import it.guesser.algashop.ordering.domain.valueobject.id.CustomerId;
 import it.guesser.algashop.ordering.domain.valueobject.id.OrderId;
 import it.guesser.algashop.ordering.domain.valueobject.id.OrderItemId;
 
-public class Order implements AggregateRoot<OrderId>{
+public class Order implements AggregateRoot<OrderId> {
 
     private OrderId id;
     private CustomerId customerId;
@@ -79,7 +79,14 @@ public class Order implements AggregateRoot<OrderId>{
                 OrderStatus.DRAFT,
                 null,
                 new HashSet<>());
+    }
 
+    public static Order ofExistent(OrderId id, CustomerId customerId, Money totalAmount, Quantity totalItems,
+            long placedAt, long paidAt,
+            long canceledAt, long readyAt, Billing billingInfo, Shipping shipping, OrderStatus status,
+            PaymentMethod paymentMethod, Set<OrderItem> items) {
+        return new Order(id, customerId, totalAmount, totalItems, placedAt, paidAt, canceledAt, readyAt, billingInfo,
+                shipping, status, paymentMethod, items);
     }
 
     public OrderId getId() {
