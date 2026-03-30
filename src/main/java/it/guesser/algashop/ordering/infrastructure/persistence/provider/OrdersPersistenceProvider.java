@@ -28,8 +28,7 @@ public class OrdersPersistenceProvider implements Orders {
 
     @Override
     public boolean exists(OrderId id) {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'exists'");
+        return ofId(id).isPresent();
     }
 
     @Override
@@ -41,8 +40,7 @@ public class OrdersPersistenceProvider implements Orders {
 
     @Override
     public long count() {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'count'");
+        return repository.count();
     }
 
 }

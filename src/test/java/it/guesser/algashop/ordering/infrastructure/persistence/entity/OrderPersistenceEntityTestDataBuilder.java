@@ -29,7 +29,7 @@ public class OrderPersistenceEntityTestDataBuilder {
         return new OrderPersistenceEntityTestDataBuilder();
     }
 
-    public OrderPersistenceEntityTestDataBuilder withId(Long id) {
+    public OrderPersistenceEntityTestDataBuilder withId(long id) {
         this.id = requireNonNull(id);
         return this;
     }
