@@ -14,10 +14,10 @@ import it.guesser.algashop.ordering.domain.valueobject.id.OrderId;
 import it.guesser.algashop.ordering.infrastructure.persistence.entity.OrderPersistenceEntity;
 
 @Component
-public class OrdemPersistenceEntityDisassembler {
+public class OrderPersistenceEntityDisassembler {
 
     public Order toDomain(OrderPersistenceEntity persistenceEntity) {
-        Order order = Order.ofExistent(
+        return Order.ofExistent(
                 new OrderId(persistenceEntity.getId()),
                 new CustomerId(persistenceEntity.getCustomerId()),
                 new Money(persistenceEntity.getTotalAmount()),
@@ -31,7 +31,6 @@ public class OrdemPersistenceEntityDisassembler {
                 OrderStatus.valueOf(persistenceEntity.getStatus()),
                 PaymentMethod.valueOf(persistenceEntity.getPaymentMethod()),
                 Set.of());
-        return order;
     }
 
 }

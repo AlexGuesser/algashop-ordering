@@ -12,7 +12,7 @@ import it.guesser.algashop.ordering.infrastructure.persistence.entity.OrderPersi
 
 class OrdemPersistenceEntityDisassemblerTest {
 
-    private final OrdemPersistenceEntityDisassembler disassembler = new OrdemPersistenceEntityDisassembler();
+    private final OrderPersistenceEntityDisassembler disassembler = new OrderPersistenceEntityDisassembler();
 
     @Test
     void givenOrderPersistenceEntity_whenToDomain_thenAllFieldsAreMappedCorrectly() {
