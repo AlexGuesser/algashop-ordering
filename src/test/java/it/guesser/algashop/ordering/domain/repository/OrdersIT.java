@@ -2,6 +2,7 @@ package it.guesser.algashop.ordering.domain.repository;
 
 import static java.util.Objects.requireNonNull;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import java.util.Optional;
 
@@ -18,6 +19,7 @@ import it.guesser.algashop.ordering.domain.valueobject.id.OrderId;
 import it.guesser.algashop.ordering.infrastructure.persistence.assembler.OrderPersistenceEntityAssembler;
 import it.guesser.algashop.ordering.infrastructure.persistence.disassembler.OrderPersistenceEntityDisassembler;
 import it.guesser.algashop.ordering.infrastructure.persistence.provider.OrdersPersistenceProvider;
+import org.springframework.orm.ObjectOptimisticLockingFailureException;
 
 @DataJpaTest
 @Import({OrdersPersistenceProvider.class, OrderPersistenceEntityAssembler.class,
@@ -74,11 +76,14 @@ public class OrdersIT {
         orders.add(orderT1);
 
         orderT2.markAsCanceled();
-        orders.add(orderT2);
+
+        assertThatThrownBy(
+                () -> orders.add(orderT2)
+        ).isExactlyInstanceOf(ObjectOptimisticLockingFailureException.class);
 
         Order savedOrder = orders.ofId(order.getId()).orElseThrow();
+        Assertions.assertThat(savedOrder.getCanceledAt()).isZero();
         Assertions.assertThat(savedOrder.getPaidAt()).isGreaterThan(0);
-        Assertions.assertThat(savedOrder.getCanceledAt()).isGreaterThan(0);
     }
 
 }

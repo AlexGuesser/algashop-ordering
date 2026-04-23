@@ -23,6 +23,7 @@ public class OrderPersistenceEntityAssembler {
         orderPersistenceEntity.setPaidAt(order.getPaidAt());
         orderPersistenceEntity.setPlacedAt(order.getPlacedAt());
         orderPersistenceEntity.setReadyAt(order.getReadyAt());
+        orderPersistenceEntity.setVersion(order.getVersion());
         return orderPersistenceEntity;
     }
 

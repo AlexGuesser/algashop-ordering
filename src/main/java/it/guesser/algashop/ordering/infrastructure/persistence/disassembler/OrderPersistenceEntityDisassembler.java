@@ -30,7 +30,8 @@ public class OrderPersistenceEntityDisassembler {
                 null,
                 OrderStatus.valueOf(persistenceEntity.getStatus()),
                 PaymentMethod.valueOf(persistenceEntity.getPaymentMethod()),
-                Set.of());
+                Set.of(),
+                persistenceEntity.getVersion());
     }
 
 }

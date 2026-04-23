@@ -46,9 +46,12 @@ public class Order implements AggregateRoot<OrderId> {
 
     private Set<OrderItem> items = new HashSet<>();
 
+    private long version;
+
+
     private Order(OrderId id, CustomerId customerId, Money totalAmount, Quantity totalItems, long placedAt, long paidAt,
             long canceledAt, long readyAt, Billing billingInfo, Shipping shipping, OrderStatus status,
-            PaymentMethod paymentMethod, Set<OrderItem> items) {
+            PaymentMethod paymentMethod, Set<OrderItem> items, long version) {
         this.id = requireNonNull(id);
         this.customerId = requireNonNull(customerId);
         this.totalAmount = requireNonNull(totalAmount);
@@ -62,6 +65,7 @@ public class Order implements AggregateRoot<OrderId> {
         this.status = requireNonNull(status);
         this.paymentMethod = paymentMethod;
         this.items = requireNonNull(items);
+        this.version = version;
     }
 
     public static Order draft(CustomerId customerId) {
@@ -78,15 +82,16 @@ public class Order implements AggregateRoot<OrderId> {
                 null,
                 OrderStatus.DRAFT,
                 null,
-                new HashSet<>());
+                new HashSet<>(),
+                0);
     }
 
     public static Order ofExistent(OrderId id, CustomerId customerId, Money totalAmount, Quantity totalItems,
             long placedAt, long paidAt,
             long canceledAt, long readyAt, Billing billingInfo, Shipping shipping, OrderStatus status,
-            PaymentMethod paymentMethod, Set<OrderItem> items) {
+            PaymentMethod paymentMethod, Set<OrderItem> items, long version) {
         return new Order(id, customerId, totalAmount, totalItems, placedAt, paidAt, canceledAt, readyAt, billingInfo,
-                shipping, status, paymentMethod, items);
+                shipping, status, paymentMethod, items, version);
     }
 
     public OrderId getId() {
@@ -307,6 +312,14 @@ public class Order implements AggregateRoot<OrderId> {
         orderItem.changeQuantity(newQuantity);
 
         recalculateTotals();
+    }
+
+    public void changeVersion(long version) {
+        this.version = version;
+    }
+
+    public long getVersion() {
+        return this.version;
     }
 
     private OrderItem findOrderItemBy(OrderItemId orderItemId) {
