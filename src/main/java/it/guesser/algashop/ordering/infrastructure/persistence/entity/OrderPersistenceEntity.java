@@ -4,6 +4,8 @@ import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.UUID;
 
+import it.guesser.algashop.ordering.infrastructure.persistence.embeddable.BillingEmbeddable;
+import it.guesser.algashop.ordering.infrastructure.persistence.embeddable.ShippingEmbeddable;
 import jakarta.persistence.*;
 import org.springframework.data.annotation.CreatedBy;
 import org.springframework.data.annotation.LastModifiedBy;
@@ -59,6 +61,10 @@ public class OrderPersistenceEntity {
 
     @Version
     private long version;
+
+    private BillingEmbeddable billing;
+
+    private ShippingEmbeddable shipping;
 
     @PrePersist
     void prePersist() {

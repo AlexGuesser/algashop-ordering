@@ -202,6 +202,10 @@ public class Order implements AggregateRoot<OrderId> {
         return OrderStatus.PAID.equals(getStatus());
     }
 
+    public long getVersion() {
+        return this.version;
+    }
+
     public void place() {
         validateIfCanBePlaced();
 

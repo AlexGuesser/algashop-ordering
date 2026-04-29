@@ -1,5 +1,7 @@
 package it.guesser.algashop.ordering.infrastructure.persistence.assembler;
 
+import it.guesser.algashop.ordering.domain.valueobject.Billing;
+import it.guesser.algashop.ordering.infrastructure.persistence.embeddable.BillingEmbeddable;
 import org.springframework.stereotype.Component;
 
 import it.guesser.algashop.ordering.domain.entity.Order;
@@ -25,6 +27,19 @@ public class OrderPersistenceEntityAssembler {
         orderPersistenceEntity.setReadyAt(order.getReadyAt());
         orderPersistenceEntity.setVersion(order.getVersion());
         return orderPersistenceEntity;
+    }
+
+    private void mergeBillingFields(OrderPersistenceEntity orderPersistenceEntity, Order order) {
+        Billing billing = order.getBilling();
+
+        if (billing == null) {
+            orderPersistenceEntity.setBilling(null);
+        }
+
+//        BillingEmbeddable.builder()
+//                .firstName(billing.f)
+//                        .email(order.getBilling().email().value())
+//                .
     }
 
 }
