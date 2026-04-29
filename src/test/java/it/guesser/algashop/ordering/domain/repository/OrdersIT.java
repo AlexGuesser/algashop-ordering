@@ -38,7 +38,7 @@ public class OrdersIT {
         Order order = OrderTestDataBuilder.anOrder().withStatus(OrderStatus.DRAFT).build();
         OrderId orderId = order.getId();
 
-        orders.add(order);
+        orders.save(order);
         Optional<Order> possibleOrder = orders.ofId(orderId);
 
         assertThat(possibleOrder).isPresent();
@@ -51,13 +51,13 @@ public class OrdersIT {
     void shouldUpdateExistingOrder() {
         Order order = OrderTestDataBuilder.anOrder().withStatus(OrderStatus.PLACED).build();
 
-        orders.add(order);
+        orders.save(order);
 
         order = orders.ofId(order.getId()).orElseThrow();
 
         order.markAsPaid();
 
-        orders.add(order);
+        orders.save(order);
 
         order = orders.ofId(order.getId()).orElseThrow();
 
@@ -67,18 +67,18 @@ public class OrdersIT {
     @Test
     void shouldNotAllowStaleUpdates() {
         Order order = OrderTestDataBuilder.anOrder().withStatus(OrderStatus.PLACED).build();
-        orders.add(order);
+        orders.save(order);
 
         Order orderT1 = orders.ofId(order.getId()).orElseThrow();
         Order orderT2 = orders.ofId(order.getId()).orElseThrow();
 
         orderT1.markAsPaid();
-        orders.add(orderT1);
+        orders.save(orderT1);
 
         orderT2.markAsCanceled();
 
         assertThatThrownBy(
-                () -> orders.add(orderT2)
+                () -> orders.save(orderT2)
         ).isExactlyInstanceOf(ObjectOptimisticLockingFailureException.class);
 
         Order savedOrder = orders.ofId(order.getId()).orElseThrow();

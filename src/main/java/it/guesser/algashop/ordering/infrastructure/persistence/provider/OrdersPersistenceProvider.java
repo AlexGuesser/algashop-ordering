@@ -1,9 +1,11 @@
 package it.guesser.algashop.ordering.infrastructure.persistence.provider;
 
+import java.lang.reflect.Field;
 import java.util.Optional;
 
 import it.guesser.algashop.ordering.infrastructure.persistence.entity.OrderPersistenceEntity;
 import jakarta.persistence.EntityManager;
+import lombok.SneakyThrows;
 import org.springframework.stereotype.Component;
 
 import it.guesser.algashop.ordering.domain.entity.Order;
@@ -13,6 +15,7 @@ import it.guesser.algashop.ordering.infrastructure.persistence.assembler.OrderPe
 import it.guesser.algashop.ordering.infrastructure.persistence.disassembler.OrderPersistenceEntityDisassembler;
 import it.guesser.algashop.ordering.infrastructure.persistence.repository.OrderPersistenceEntityRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.util.ReflectionUtils;
 
 @Component
 @RequiredArgsConstructor
@@ -25,8 +28,7 @@ public class OrdersPersistenceProvider implements Orders {
 
     @Override
     public Optional<Order> ofId(OrderId id) {
-        return repository.findById(id.value().toLong())
-                .map(disassembler::toDomain);
+        return repository.findById(id.value().toLong()).map(disassembler::toDomain);
     }
 
     @Override
@@ -35,7 +37,7 @@ public class OrdersPersistenceProvider implements Orders {
     }
 
     @Override
-    public void add(Order aggregateRoot) {
+    public void save(Order aggregateRoot) {
         long orderId = aggregateRoot.getId().value().toLong();
 
         repository.findById(orderId).ifPresentOrElse(
@@ -49,22 +51,32 @@ public class OrdersPersistenceProvider implements Orders {
 
     }
 
-    private void update(Order aggregateRoot, OrderPersistenceEntity entity) {
-        OrderPersistenceEntity persistenceEntity = assembler.merge(entity, aggregateRoot);
-        entityManager.detach(persistenceEntity);
-        repository.saveAndFlush(persistenceEntity);
-        aggregateRoot.changeVersion(persistenceEntity.getVersion());
-    }
-
-    private void insert(Order aggregateRoot) {
-        var persistenceEntity = assembler.fromDomain(aggregateRoot);
-        repository.saveAndFlush(persistenceEntity);
-        aggregateRoot.changeVersion(persistenceEntity.getVersion());
-    }
-
     @Override
     public long count() {
         return repository.count();
     }
+
+    private void update(Order aggregateRoot, OrderPersistenceEntity entity) {
+        OrderPersistenceEntity persistenceEntity = assembler.merge(entity, aggregateRoot);
+        entityManager.detach(persistenceEntity);
+        repository.saveAndFlush(persistenceEntity);
+
+    }
+
+
+    private void insert(Order aggregateRoot) {
+        var persistenceEntity = assembler.fromDomain(aggregateRoot);
+        repository.saveAndFlush(persistenceEntity);
+        updateVersion(aggregateRoot, persistenceEntity);
+    }
+
+    @SneakyThrows
+    private void updateVersion(Order aggregateRoot, OrderPersistenceEntity persistenceEntity) {
+        Field version = aggregateRoot.getClass().getDeclaredField("version");
+        version.setAccessible(true);
+        ReflectionUtils.setField(version, aggregateRoot, persistenceEntity.getVersion());
+        version.setAccessible(false);
+    }
+
 
 }

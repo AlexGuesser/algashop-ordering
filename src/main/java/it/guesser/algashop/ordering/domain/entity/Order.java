@@ -314,12 +314,8 @@ public class Order implements AggregateRoot<OrderId> {
         recalculateTotals();
     }
 
-    public void changeVersion(long version) {
+    private void changeVersion(long version) {
         this.version = version;
-    }
-
-    public long getVersion() {
-        return this.version;
     }
 
     private OrderItem findOrderItemBy(OrderItemId orderItemId) {

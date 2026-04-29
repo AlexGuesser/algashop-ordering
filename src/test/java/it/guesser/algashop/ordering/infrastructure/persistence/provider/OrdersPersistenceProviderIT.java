@@ -30,7 +30,7 @@ class OrdersPersistenceProviderIT {
     void shouldUpdateAndKeepPersistenceEntityState() {
         Order order = OrderTestDataBuilder.anOrder().withStatus(OrderStatus.PLACED).build();
         long orderId = order.getId().value().toLong();
-        ordersPersistenceProvider.add(order);
+        ordersPersistenceProvider.save(order);
 
         var persistenceEntity = orderPersistenceEntityRepository.findById(orderId).orElseThrow();
 
@@ -42,7 +42,7 @@ class OrdersPersistenceProviderIT {
 
         order = ordersPersistenceProvider.ofId(order.getId()).orElseThrow();
         order.markAsPaid();
-        ordersPersistenceProvider.add(order);
+        ordersPersistenceProvider.save(order);
 
         persistenceEntity = orderPersistenceEntityRepository.findById(orderId).orElseThrow();
 
