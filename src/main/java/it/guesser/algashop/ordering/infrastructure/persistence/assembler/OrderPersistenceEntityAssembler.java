@@ -1,11 +1,18 @@
 package it.guesser.algashop.ordering.infrastructure.persistence.assembler;
 
-import it.guesser.algashop.ordering.domain.valueobject.Billing;
-import it.guesser.algashop.ordering.infrastructure.persistence.embeddable.BillingEmbeddable;
 import org.springframework.stereotype.Component;
 
 import it.guesser.algashop.ordering.domain.entity.Order;
+import it.guesser.algashop.ordering.domain.valueobject.Address;
+import it.guesser.algashop.ordering.domain.valueobject.Billing;
+import it.guesser.algashop.ordering.domain.valueobject.Recipient;
+import it.guesser.algashop.ordering.domain.valueobject.Shipping;
+import it.guesser.algashop.ordering.infrastructure.persistence.embeddable.AddressEmbeddable;
+import it.guesser.algashop.ordering.infrastructure.persistence.embeddable.BillingEmbeddable;
+import it.guesser.algashop.ordering.infrastructure.persistence.embeddable.RecipientEmbeddable;
+import it.guesser.algashop.ordering.infrastructure.persistence.embeddable.ShippingEmbeddable;
 import it.guesser.algashop.ordering.infrastructure.persistence.entity.OrderPersistenceEntity;
+import it.guesser.algashop.ordering.infrastructure.persistence.utils.FullNameUtil;
 
 @Component
 public class OrderPersistenceEntityAssembler {
@@ -26,6 +33,8 @@ public class OrderPersistenceEntityAssembler {
         orderPersistenceEntity.setPlacedAt(order.getPlacedAt());
         orderPersistenceEntity.setReadyAt(order.getReadyAt());
         orderPersistenceEntity.setVersion(order.getVersion());
+        mergeBillingFields(orderPersistenceEntity, order);
+        mergeShippingFields(orderPersistenceEntity, order);
         return orderPersistenceEntity;
     }
 
@@ -34,12 +43,57 @@ public class OrderPersistenceEntityAssembler {
 
         if (billing == null) {
             orderPersistenceEntity.setBilling(null);
+            return;
         }
 
-//        BillingEmbeddable.builder()
-//                .firstName(billing.f)
-//                        .email(order.getBilling().email().value())
-//                .
+        Address address = billing.address();
+
+        orderPersistenceEntity.setBilling(BillingEmbeddable.builder()
+                .firstName(FullNameUtil.getFirstName(billing.fullName()).orElse(null))
+                .lastName(FullNameUtil.getLastName(billing.fullName()).orElse(null))
+                .document(billing.document().value())
+                .phone(billing.phone().value())
+                .email(billing.email().value())
+                .address(AddressEmbeddable.builder()
+                        .street(address.street())
+                        .complement(address.complement())
+                        .neighborhood(address.neighborhood())
+                        .city(address.city())
+                        .state(address.state())
+                        .zipCode(address.zipCode().value())
+                        .build())
+                .build());
+    }
+
+    private void mergeShippingFields(OrderPersistenceEntity orderPersistenceEntity, Order order) {
+        Shipping shipping = order.getShipping();
+
+        if (shipping == null) {
+            orderPersistenceEntity.setShipping(null);
+            return;
+        }
+
+        Recipient recipient = shipping.recipient();
+        Address address = shipping.address();
+
+        orderPersistenceEntity.setShipping(ShippingEmbeddable.builder()
+                .cost(shipping.cost().value())
+                .expectedDate(shipping.expectedDate())
+                .recipient(RecipientEmbeddable.builder()
+                        .firstName(FullNameUtil.getFirstName(recipient.fullName()).orElse(null))
+                        .lastName(FullNameUtil.getLastName(recipient.fullName()).orElse(null))
+                        .document(recipient.document().value())
+                        .phone(recipient.phone().value())
+                        .build())
+                .address(AddressEmbeddable.builder()
+                        .street(address.street())
+                        .complement(address.complement())
+                        .neighborhood(address.neighborhood())
+                        .city(address.city())
+                        .state(address.state())
+                        .zipCode(address.zipCode().value())
+                        .build())
+                .build());
     }
 
 }

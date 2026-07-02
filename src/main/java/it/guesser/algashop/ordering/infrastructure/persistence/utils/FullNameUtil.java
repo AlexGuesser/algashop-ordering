@@ -43,6 +43,9 @@ public class FullNameUtil {
         String lastName = String.join(" ", namesList);
         return Optional.of(lastName);
     }
+    public static String getFullName(String firstName, String lastName) {
+        return String.join(" ", firstName, lastName);
+    }
 
 
 }

@@ -5,18 +5,17 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.data.jpa.test.autoconfigure.DataJpaTest;
 import org.springframework.boot.jdbc.test.autoconfigure.AutoConfigureTestDatabase;
 import org.springframework.boot.jdbc.test.autoconfigure.AutoConfigureTestDatabase.Replace;
 import org.springframework.context.annotation.Import;
 
+import it.guesser.algashop.ordering.AbstractDataJpaIntegrationTest;
 import it.guesser.algashop.ordering.infrastructure.persistence.config.SpringDataAuditingConfig;
 import it.guesser.algashop.ordering.infrastructure.persistence.entity.OrderPersistenceEntity;
 
-@DataJpaTest
 @AutoConfigureTestDatabase(replace = Replace.NONE)
 @Import(SpringDataAuditingConfig.class)
-public class OrderPersistenceEntityRepositoryIT {
+public class OrderPersistenceEntityRepositoryIT extends AbstractDataJpaIntegrationTest {
 
     private final OrderPersistenceEntityRepository repository;
 

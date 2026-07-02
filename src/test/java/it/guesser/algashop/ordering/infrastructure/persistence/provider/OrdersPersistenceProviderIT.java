@@ -10,12 +10,12 @@ import it.guesser.algashop.ordering.infrastructure.persistence.repository.OrderP
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.data.jpa.test.autoconfigure.DataJpaTest;
 import org.springframework.context.annotation.Import;
 
-@DataJpaTest
+import it.guesser.algashop.ordering.AbstractDataJpaIntegrationTest;
+
 @Import({OrdersPersistenceProvider.class, OrderPersistenceEntityAssembler.class, OrderPersistenceEntityDisassembler.class, SpringDataAuditingConfig.class})
-class OrdersPersistenceProviderIT {
+class OrdersPersistenceProviderIT extends AbstractDataJpaIntegrationTest {
 
     private OrdersPersistenceProvider ordersPersistenceProvider;
     private OrderPersistenceEntityRepository orderPersistenceEntityRepository;

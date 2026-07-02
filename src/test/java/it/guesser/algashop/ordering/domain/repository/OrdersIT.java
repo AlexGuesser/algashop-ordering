@@ -9,9 +9,9 @@ import java.util.Optional;
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.data.jpa.test.autoconfigure.DataJpaTest;
 import org.springframework.context.annotation.Import;
 
+import it.guesser.algashop.ordering.AbstractDataJpaIntegrationTest;
 import it.guesser.algashop.ordering.domain.entity.Order;
 import it.guesser.algashop.ordering.domain.entity.OrderStatus;
 import it.guesser.algashop.ordering.domain.entity.OrderTestDataBuilder;
@@ -21,10 +21,9 @@ import it.guesser.algashop.ordering.infrastructure.persistence.disassembler.Orde
 import it.guesser.algashop.ordering.infrastructure.persistence.provider.OrdersPersistenceProvider;
 import org.springframework.orm.ObjectOptimisticLockingFailureException;
 
-@DataJpaTest
 @Import({OrdersPersistenceProvider.class, OrderPersistenceEntityAssembler.class,
         OrderPersistenceEntityDisassembler.class})
-public class OrdersIT {
+public class OrdersIT extends AbstractDataJpaIntegrationTest {
 
     private final Orders orders;
 
