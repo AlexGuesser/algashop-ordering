@@ -15,10 +15,13 @@ import it.guesser.algashop.ordering.domain.valueobject.FullName;
 import it.guesser.algashop.ordering.domain.valueobject.Money;
 import it.guesser.algashop.ordering.domain.valueobject.Phone;
 import it.guesser.algashop.ordering.domain.valueobject.Quantity;
+import it.guesser.algashop.ordering.domain.valueobject.Recipient;
+import it.guesser.algashop.ordering.domain.valueobject.Shipping;
 import it.guesser.algashop.ordering.domain.valueobject.ZipCode;
 import it.guesser.algashop.ordering.domain.valueobject.id.CustomerId;
 import it.guesser.algashop.ordering.domain.valueobject.id.OrderId;
 import it.guesser.algashop.ordering.infrastructure.persistence.embeddable.BillingEmbeddable;
+import it.guesser.algashop.ordering.infrastructure.persistence.embeddable.ShippingEmbeddable;
 import it.guesser.algashop.ordering.infrastructure.persistence.entity.OrderPersistenceEntity;
 import it.guesser.algashop.ordering.infrastructure.persistence.utils.FullNameUtil;
 
@@ -36,7 +39,7 @@ public class OrderPersistenceEntityDisassembler {
                 persistenceEntity.getCanceledAt(),
                 persistenceEntity.getReadyAt(),
                 toBilling(persistenceEntity.getBilling()),
-                null,
+                toShipping(persistenceEntity.getShipping()),
                 OrderStatus.valueOf(persistenceEntity.getStatus()),
                 PaymentMethod.valueOf(persistenceEntity.getPaymentMethod()),
                 Set.of(),
@@ -58,5 +61,29 @@ public class OrderPersistenceEntityDisassembler {
                         billingEmbeddable.getAddress().getState(),
                         new ZipCode(billingEmbeddable.getAddress().getZipCode())),
                 new Email(billingEmbeddable.getEmail()));
+    }
+
+    private Shipping toShipping(ShippingEmbeddable shippingEmbeddable) {
+        if (shippingEmbeddable == null) {
+            return null;
+        }
+
+        return new Shipping(
+                new Money(shippingEmbeddable.getCost()),
+                shippingEmbeddable.getExpectedDate(),
+                new Recipient(
+                        new FullName(
+                                FullNameUtil.getFullName(
+                                        shippingEmbeddable.getRecipient().getFirstName(),
+                                        shippingEmbeddable.getRecipient().getLastName())),
+                        new Document(shippingEmbeddable.getRecipient().getDocument()),
+                        new Phone(shippingEmbeddable.getRecipient().getPhone())),
+                new Address(
+                        shippingEmbeddable.getAddress().getStreet(),
+                        shippingEmbeddable.getAddress().getComplement(),
+                        shippingEmbeddable.getAddress().getNeighborhood(),
+                        shippingEmbeddable.getAddress().getCity(),
+                        shippingEmbeddable.getAddress().getState(),
+                        new ZipCode(shippingEmbeddable.getAddress().getZipCode())));
     }
 }

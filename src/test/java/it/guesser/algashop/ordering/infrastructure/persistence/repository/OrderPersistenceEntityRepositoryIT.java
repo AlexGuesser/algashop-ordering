@@ -1,6 +1,7 @@
 package it.guesser.algashop.ordering.infrastructure.persistence.repository;
 
 import static it.guesser.algashop.ordering.infrastructure.persistence.entity.OrderPersistenceEntityTestDataBuilder.anOrderPersistenceEntity;
+import static it.guesser.algashop.ordering.infrastructure.persistence.entity.OrderPersistenceEntityTestDataBuilder.existingItem;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import org.junit.jupiter.api.Test;
@@ -27,12 +28,15 @@ public class OrderPersistenceEntityRepositoryIT extends AbstractDataJpaIntegrati
     @Test
     void shouldPersist() {
         OrderPersistenceEntity order = anOrderPersistenceEntity()
+                .withItem(existingItem())
                 .build();
         assertThat(repository.count()).isZero();
 
         repository.saveAndFlush(order);
 
-        assertThat(repository.existsById(order.getId())).isTrue();
+        OrderPersistenceEntity savedEntity = repository.getReferenceById(order.getId());
+
+        assertThat(savedEntity.getItems()).isNotEmpty();
     }
 
     @Test

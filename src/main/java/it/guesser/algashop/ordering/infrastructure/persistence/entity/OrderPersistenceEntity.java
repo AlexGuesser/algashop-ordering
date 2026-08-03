@@ -2,6 +2,8 @@ package it.guesser.algashop.ordering.infrastructure.persistence.entity;
 
 import java.math.BigDecimal;
 import java.time.Instant;
+import java.util.HashSet;
+import java.util.Set;
 import java.util.UUID;
 
 import it.guesser.algashop.ordering.infrastructure.persistence.embeddable.BillingEmbeddable;
@@ -26,8 +28,6 @@ import lombok.ToString;
 @Setter
 @ToString(of = "id")
 @NoArgsConstructor
-@AllArgsConstructor
-@Builder
 @EqualsAndHashCode(onlyExplicitlyIncluded = true)
 public class OrderPersistenceEntity {
 
@@ -65,6 +65,38 @@ public class OrderPersistenceEntity {
     private BillingEmbeddable billing;
 
     private ShippingEmbeddable shipping;
+
+    @OneToMany(mappedBy = "order", cascade = CascadeType.ALL, orphanRemoval = true)
+    private Set<OrderItemPersistencyEntity> items = new HashSet<>();
+
+    private void setOrderOnItems() {
+        getItems().forEach(item -> item.setOrder(this));
+    }
+
+    @Builder
+    public OrderPersistenceEntity(long id, UUID customerId, BigDecimal totalAmount, Integer totalItems, String status,
+            String paymentMethod, long placedAt, long paidAt, long canceledAt, long readyAt, UUID createByUserId,
+            long lastModifiedAt, UUID lastModifiedByUserId, long version, BillingEmbeddable billing,
+            ShippingEmbeddable shipping, Set<OrderItemPersistencyEntity> items) {
+        this.id = id;
+        this.customerId = customerId;
+        this.totalAmount = totalAmount;
+        this.totalItems = totalItems;
+        this.status = status;
+        this.paymentMethod = paymentMethod;
+        this.placedAt = placedAt;
+        this.paidAt = paidAt;
+        this.canceledAt = canceledAt;
+        this.readyAt = readyAt;
+        this.createByUserId = createByUserId;
+        this.lastModifiedAt = lastModifiedAt;
+        this.lastModifiedByUserId = lastModifiedByUserId;
+        this.version = version;
+        this.billing = billing;
+        this.shipping = shipping;
+        this.items = items == null ? new HashSet<>() : items;
+        setOrderOnItems();
+    }
 
     @PrePersist
     void prePersist() {

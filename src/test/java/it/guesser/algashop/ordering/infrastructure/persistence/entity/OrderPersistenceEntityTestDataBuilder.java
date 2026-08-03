@@ -4,6 +4,8 @@ import static java.util.Objects.requireNonNull;
 
 import java.math.BigDecimal;
 import java.time.Instant;
+import java.util.HashSet;
+import java.util.Set;
 import java.util.UUID;
 
 import it.guesser.algashop.ordering.domain.entity.PaymentMethod;
@@ -21,6 +23,7 @@ public class OrderPersistenceEntityTestDataBuilder {
     private long paidAt = 0L;
     private long canceledAt = 0L;
     private long readyAt = 0L;
+    private Set<OrderItemPersistencyEntity> items = new HashSet<>();
 
     private OrderPersistenceEntityTestDataBuilder() {
     }
@@ -79,6 +82,11 @@ public class OrderPersistenceEntityTestDataBuilder {
         return this;
     }
 
+    public OrderPersistenceEntityTestDataBuilder withItem(OrderItemPersistencyEntity item) {
+        this.items.add(item);
+        return this;
+    }
+
     public OrderPersistenceEntity build() {
         return OrderPersistenceEntity.builder()
                 .id(id)
@@ -91,7 +99,18 @@ public class OrderPersistenceEntityTestDataBuilder {
                 .paidAt(paidAt)
                 .canceledAt(canceledAt)
                 .readyAt(readyAt)
+                .items(items)
+                .build();
+    }
+
+    public static OrderItemPersistencyEntity existingItem() {
+        return OrderItemPersistencyEntity.builder()
+                .id(IdGenerator.generateTSID().toLong())
+                .productPrice(new BigDecimal("500"))
+                .quantity(2)
+                .totalAmount(new BigDecimal("1000"))
+                .productName("Notebook")
+                .productId(IdGenerator.generateTimeBasedUuid())
                 .build();
     }
 }
-
