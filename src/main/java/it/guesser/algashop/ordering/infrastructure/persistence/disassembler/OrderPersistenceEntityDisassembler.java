@@ -1,23 +1,18 @@
 package it.guesser.algashop.ordering.infrastructure.persistence.disassembler;
 
 import java.util.Set;
+import java.util.stream.Collectors;
 
+import it.guesser.algashop.ordering.domain.entity.OrderItem;
+import it.guesser.algashop.ordering.domain.valueobject.*;
+import it.guesser.algashop.ordering.domain.valueobject.id.OrderItemId;
+import it.guesser.algashop.ordering.domain.valueobject.id.ProductId;
+import it.guesser.algashop.ordering.infrastructure.persistence.entity.OrderItemPersistencyEntity;
 import org.springframework.stereotype.Component;
 
 import it.guesser.algashop.ordering.domain.entity.Order;
 import it.guesser.algashop.ordering.domain.entity.OrderStatus;
 import it.guesser.algashop.ordering.domain.entity.PaymentMethod;
-import it.guesser.algashop.ordering.domain.valueobject.Address;
-import it.guesser.algashop.ordering.domain.valueobject.Billing;
-import it.guesser.algashop.ordering.domain.valueobject.Document;
-import it.guesser.algashop.ordering.domain.valueobject.Email;
-import it.guesser.algashop.ordering.domain.valueobject.FullName;
-import it.guesser.algashop.ordering.domain.valueobject.Money;
-import it.guesser.algashop.ordering.domain.valueobject.Phone;
-import it.guesser.algashop.ordering.domain.valueobject.Quantity;
-import it.guesser.algashop.ordering.domain.valueobject.Recipient;
-import it.guesser.algashop.ordering.domain.valueobject.Shipping;
-import it.guesser.algashop.ordering.domain.valueobject.ZipCode;
 import it.guesser.algashop.ordering.domain.valueobject.id.CustomerId;
 import it.guesser.algashop.ordering.domain.valueobject.id.OrderId;
 import it.guesser.algashop.ordering.infrastructure.persistence.embeddable.BillingEmbeddable;
@@ -42,8 +37,21 @@ public class OrderPersistenceEntityDisassembler {
                 toShipping(persistenceEntity.getShipping()),
                 OrderStatus.valueOf(persistenceEntity.getStatus()),
                 PaymentMethod.valueOf(persistenceEntity.getPaymentMethod()),
-                Set.of(),
+                toItems(persistenceEntity.getItems()),
                 persistenceEntity.getVersion());
+    }
+
+    private Set<OrderItem> toItems(Set<OrderItemPersistencyEntity> items) {
+        return items.stream()
+                .map(item -> OrderItem.ofExistent(
+                        new OrderItemId(item.getId()),
+                        new OrderId(item.getOrderId()),
+                        new ProductId(item.getProductId()),
+                        new ProductName(item.getProductName()),
+                        new Money(item.getProductPrice()),
+                        new Quantity(item.getQuantity()),
+                        new Money(item.getTotalAmount())
+                )).collect(Collectors.toSet());
     }
 
     private Billing toBilling(BillingEmbeddable billingEmbeddable) {

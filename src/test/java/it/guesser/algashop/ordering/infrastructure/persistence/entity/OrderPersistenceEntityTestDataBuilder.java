@@ -87,6 +87,11 @@ public class OrderPersistenceEntityTestDataBuilder {
         return this;
     }
 
+    public OrderPersistenceEntityTestDataBuilder withItems(Set<OrderItemPersistencyEntity> items) {
+        this.items.addAll(items);
+        return this;
+    }
+
     public OrderPersistenceEntity build() {
         return OrderPersistenceEntity.builder()
                 .id(id)

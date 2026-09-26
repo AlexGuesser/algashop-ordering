@@ -24,7 +24,7 @@ public class OrderItem {
     private Money totalAmount;
 
     private OrderItem(OrderItemId id, OrderId orderId, ProductId productId, ProductName productName, Money price,
-            Quantity quantity, Money totalAmount) {
+                      Quantity quantity, Money totalAmount) {
         this.id = requireNonNull(id);
         this.orderId = requireNonNull(orderId);
         this.productId = requireNonNull(productId);
@@ -35,7 +35,7 @@ public class OrderItem {
     }
 
     protected static OrderItem brandNew(OrderId orderId, Product product,
-            Quantity quantity) {
+                                        Quantity quantity) {
         requireNonNull(orderId);
         requireNonNull(product);
         requireNonNull(quantity);
@@ -48,6 +48,11 @@ public class OrderItem {
                 product.price(),
                 quantity,
                 product.price().multiply(quantity));
+    }
+
+    public static OrderItem ofExistent(OrderItemId id, OrderId orderId, ProductId productId, ProductName productName, Money price,
+                                       Quantity quantity, Money totalAmount) {
+        return new OrderItem(id, orderId, productId, productName, price, quantity, totalAmount);
     }
 
     public OrderItemId getId() {

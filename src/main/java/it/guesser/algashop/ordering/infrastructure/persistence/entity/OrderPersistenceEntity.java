@@ -21,6 +21,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.ToString;
+import org.springframework.util.CollectionUtils;
 
 @Entity
 @Table(name = "\"order\"")
@@ -73,11 +74,25 @@ public class OrderPersistenceEntity {
         getItems().forEach(item -> item.setOrder(this));
     }
 
+    private void setItems(Set<OrderItemPersistencyEntity> items) {
+        this.items = items;
+    }
+
+    public void replaceItems(Set<OrderItemPersistencyEntity> items) {
+        if (CollectionUtils.isEmpty(items)) {
+            setItems(new HashSet<>());
+            return;
+        }
+
+        setItems(items);
+        setOrderOnItems();
+    }
+
     @Builder
     public OrderPersistenceEntity(long id, UUID customerId, BigDecimal totalAmount, Integer totalItems, String status,
-            String paymentMethod, long placedAt, long paidAt, long canceledAt, long readyAt, UUID createByUserId,
-            long lastModifiedAt, UUID lastModifiedByUserId, long version, BillingEmbeddable billing,
-            ShippingEmbeddable shipping, Set<OrderItemPersistencyEntity> items) {
+                                  String paymentMethod, long placedAt, long paidAt, long canceledAt, long readyAt, UUID createByUserId,
+                                  long lastModifiedAt, UUID lastModifiedByUserId, long version, BillingEmbeddable billing,
+                                  ShippingEmbeddable shipping, Set<OrderItemPersistencyEntity> items) {
         this.id = id;
         this.customerId = customerId;
         this.totalAmount = totalAmount;

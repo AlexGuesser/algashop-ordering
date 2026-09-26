@@ -1,5 +1,7 @@
 package it.guesser.algashop.ordering.infrastructure.persistence.assembler;
 
+import it.guesser.algashop.ordering.domain.entity.OrderItem;
+import it.guesser.algashop.ordering.infrastructure.persistence.entity.OrderItemPersistencyEntity;
 import org.springframework.stereotype.Component;
 
 import it.guesser.algashop.ordering.domain.entity.Order;
@@ -13,6 +15,9 @@ import it.guesser.algashop.ordering.infrastructure.persistence.embeddable.Recipi
 import it.guesser.algashop.ordering.infrastructure.persistence.embeddable.ShippingEmbeddable;
 import it.guesser.algashop.ordering.infrastructure.persistence.entity.OrderPersistenceEntity;
 import it.guesser.algashop.ordering.infrastructure.persistence.utils.FullNameUtil;
+
+import java.util.Set;
+import java.util.stream.Collectors;
 
 @Component
 public class OrderPersistenceEntityAssembler {
@@ -35,7 +40,31 @@ public class OrderPersistenceEntityAssembler {
         orderPersistenceEntity.setVersion(order.getVersion());
         mergeBillingFields(orderPersistenceEntity, order);
         mergeShippingFields(orderPersistenceEntity, order);
+        mergeItems(orderPersistenceEntity, order);
         return orderPersistenceEntity;
+    }
+
+    private void mergeItems(OrderPersistenceEntity orderPersistenceEntity, Order order) {
+        Set<OrderItemPersistencyEntity> persistenceEntities = order.getItems()
+                .stream()
+                .map(this::fromDomain)
+                .collect(Collectors.toSet());
+
+        orderPersistenceEntity.replaceItems(persistenceEntities);
+    }
+
+    public OrderItemPersistencyEntity fromDomain(OrderItem orderItem) {
+        return merge(new OrderItemPersistencyEntity(), orderItem);
+    }
+
+    private OrderItemPersistencyEntity merge(OrderItemPersistencyEntity itemPersistence, OrderItem itemDomain) {
+        itemPersistence.setId(itemDomain.getId().value().toLong());
+        itemPersistence.setProductId(itemDomain.getProductId().value());
+        itemPersistence.setProductName(itemDomain.getProductName().value());
+        itemPersistence.setProductPrice(itemDomain.getProductPrice().value());
+        itemPersistence.setQuantity(itemDomain.getQuantity().value());
+        itemPersistence.setTotalAmount(itemDomain.getTotalAmount().value());
+        return itemPersistence;
     }
 
     private void mergeBillingFields(OrderPersistenceEntity orderPersistenceEntity, Order order) {
