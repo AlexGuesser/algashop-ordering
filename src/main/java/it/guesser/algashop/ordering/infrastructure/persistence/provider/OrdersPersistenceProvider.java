@@ -5,6 +5,7 @@ import java.util.Optional;
 
 import it.guesser.algashop.ordering.infrastructure.persistence.entity.OrderPersistenceEntity;
 import jakarta.persistence.EntityManager;
+import jakarta.transaction.Transactional;
 import lombok.SneakyThrows;
 import org.springframework.stereotype.Component;
 
@@ -19,6 +20,7 @@ import org.springframework.util.ReflectionUtils;
 
 @Component
 @RequiredArgsConstructor
+@Transactional 
 public class OrdersPersistenceProvider implements Orders {
 
     private final OrderPersistenceEntityRepository repository;
@@ -33,7 +35,7 @@ public class OrdersPersistenceProvider implements Orders {
 
     @Override
     public boolean exists(OrderId id) {
-        return ofId(id).isPresent();
+        return repository.existsById(id.value().toLong());
     }
 
     @Override
@@ -41,13 +43,12 @@ public class OrdersPersistenceProvider implements Orders {
         long orderId = aggregateRoot.getId().value().toLong();
 
         repository.findById(orderId).ifPresentOrElse(
-                //UPDATE
+                // UPDATE
                 (persistenceEntity) -> update(aggregateRoot, persistenceEntity),
                 // INSERT
                 () -> insert(aggregateRoot)
 
         );
-
 
     }
 
@@ -63,7 +64,6 @@ public class OrdersPersistenceProvider implements Orders {
 
     }
 
-
     private void insert(Order aggregateRoot) {
         var persistenceEntity = assembler.fromDomain(aggregateRoot);
         repository.saveAndFlush(persistenceEntity);
@@ -77,6 +77,5 @@ public class OrdersPersistenceProvider implements Orders {
         ReflectionUtils.setField(version, aggregateRoot, persistenceEntity.getVersion());
         version.setAccessible(false);
     }
-
 
 }

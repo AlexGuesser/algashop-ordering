@@ -21,8 +21,8 @@ import it.guesser.algashop.ordering.infrastructure.persistence.disassembler.Orde
 import it.guesser.algashop.ordering.infrastructure.persistence.provider.OrdersPersistenceProvider;
 import org.springframework.orm.ObjectOptimisticLockingFailureException;
 
-@Import({OrdersPersistenceProvider.class, OrderPersistenceEntityAssembler.class,
-        OrderPersistenceEntityDisassembler.class})
+@Import({ OrdersPersistenceProvider.class, OrderPersistenceEntityAssembler.class,
+        OrderPersistenceEntityDisassembler.class })
 public class OrdersIT extends AbstractDataJpaIntegrationTest {
 
     private final Orders orders;
@@ -77,12 +77,32 @@ public class OrdersIT extends AbstractDataJpaIntegrationTest {
         orderT2.markAsCanceled();
 
         assertThatThrownBy(
-                () -> orders.save(orderT2)
-        ).isExactlyInstanceOf(ObjectOptimisticLockingFailureException.class);
+                () -> orders.save(orderT2)).isExactlyInstanceOf(ObjectOptimisticLockingFailureException.class);
 
         Order savedOrder = orders.ofId(order.getId()).orElseThrow();
         Assertions.assertThat(savedOrder.getCanceledAt()).isZero();
         Assertions.assertThat(savedOrder.getPaidAt()).isGreaterThan(0);
+    }
+
+    @Test
+    void shouldCountExistingOrders() {
+        assertThat(orders.count()).isZero();
+
+        Order order1 = OrderTestDataBuilder.anOrder().withStatus(OrderStatus.DRAFT).build();
+        Order order2 = OrderTestDataBuilder.anOrder().withStatus(OrderStatus.DRAFT).build();
+
+        orders.save(order1);
+        orders.save(order2);
+
+        assertThat(orders.count()).isEqualTo(2);
+    }
+
+    @Test
+    void shouldReturnTrue_whenOrderExists() {
+        Order order = OrderTestDataBuilder.anOrder().withStatus(OrderStatus.DRAFT).build();
+        orders.save(order);
+
+        assertThat(orders.exists(order.getId())).isTrue();
     }
 
 }
